@@ -1,0 +1,7 @@
+Name,Count,ATK,HP
+King,1,20,20
+Queen,2,9,9
+Rook,4,5,5
+Bishop,4,3,3
+Knight,4,3,3
+Pawn,16,1,1
