@@ -4,6 +4,8 @@ using UnityEngine.Events;
 public class GameStateMachine : MonoBehaviour
 {
     public UnityEvent<string> OnStateChanged;
+
+    public string WhoWins;
     private IState _currentState;
     public static GameStateMachine Instance { get; private set; }
 
@@ -35,10 +37,5 @@ public class GameStateMachine : MonoBehaviour
         _currentState = newState;
         _currentState?.OnEnter();
         OnStateChanged?.Invoke(_currentState?.GetType().Name);
-    }
-
-    public int GetPlayerWins(string playerName)
-    {
-        return _currentState.GetWinCount(playerName);
     }
 }

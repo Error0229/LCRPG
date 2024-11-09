@@ -63,17 +63,17 @@ public class SweatShop : MonoBehaviour
             var atk = int.Parse(fields[2]);
             var hp = int.Parse(fields[3]);
             var def = int.Parse(fields[4]);
-            var range = int.Parse(fields[5]);
+            var ability = int.Parse(fields[5]);
             var speed = int.Parse(fields[6]);
             // Add black pieces
             for (var j = 0; j < count; j++)
             {
                 var blackPiece =
-                    Instance.CreateInstance<Piece>(hp, atk, def, range, speed, Side.Black, Role.None,
+                    Instance.CreateInstance<Piece>(hp, atk, def, ability, speed, Side.Black, Role.None,
                         pieceName.ToPieceType());
                 _blackPieces.Add(blackPiece);
                 var whitePiece =
-                    Instance.CreateInstance<Piece>(hp, atk, def, range, speed, Side.White, Role.None,
+                    Instance.CreateInstance<Piece>(hp, atk, def, ability, speed, Side.White, Role.None,
                         pieceName.ToPieceType());
                 _whitePieces.Add(whitePiece);
             }
@@ -160,6 +160,9 @@ public class SweatShop : MonoBehaviour
             if (piece.Side == Side.Black) _blackPieces.Add(piece);
             else _whitePieces.Add(piece);
         }
+
+        foreach (var piece in _blackPieces) print("Black: " + piece.Type);
+        foreach (var piece in _whitePieces) print("White: " + piece.Type);
     }
 
     public int GetRemainPiecesCount(Side side)
@@ -200,14 +203,14 @@ public class SweatShop : MonoBehaviour
         return null;
     }
 
-    public T CreateInstance<T>(int hp, int atk, int def, int range, int speed, Side side, Role role, PieceType type)
+    public T CreateInstance<T>(int hp, int atk, int def, int ability, int speed, Side side, Role role, PieceType type)
         where T : Piece
     {
         var pieceObject = Instantiate(Instance._piecePrefab, Vector3.zero, Quaternion.identity);
         // pieceObject.SetActive(false);
         var piece = pieceObject.GetComponent<T>();
+        piece.Initialize(hp, atk, def, ability, speed, side, role, type);
         piece.Disable();
-        piece.Initialize(hp, atk, def, range, speed, side, role, type);
         Instance._pieces.Add(piece);
         return piece;
     }

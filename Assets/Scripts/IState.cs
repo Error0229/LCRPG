@@ -11,6 +11,4 @@ public abstract class IState
     public abstract void OnEnter();
     public abstract void OnUpdate();
     public abstract void OnExit();
-
-    public abstract int GetWinCount(string playerName);
 }

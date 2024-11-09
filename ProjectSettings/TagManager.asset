@@ -7,6 +7,8 @@ TagManager:
   - HandUI
   - Placeable
   - Piece
+  - PieceText
+  - SkillText
   layers:
   - Default
   - TransparentFX

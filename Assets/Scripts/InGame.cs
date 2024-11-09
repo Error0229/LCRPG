@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class InGame : IState, INGameEvent
 {
@@ -29,6 +30,8 @@ public class InGame : IState, INGameEvent
         Idle
     }
 
+    private readonly bool _AnimationDone;
+
     private readonly List<Player> _players;
     private readonly int[] _playerWins;
     private int _currentMatch;
@@ -43,8 +46,8 @@ public class InGame : IState, INGameEvent
 
     public InGame(GameStateMachine machine) : base(machine)
     {
-        var defaultHp = 20;
-        var defaultAtk = 20;
+        var defaultHp = 25;
+        var defaultAtk = 10;
         _players = new List<Player>();
         var p1 = GameObject.Find("PlayerA").GetComponent<Player>();
         var p2 = GameObject.Find("PlayerB").GetComponent<Player>();
@@ -54,6 +57,7 @@ public class InGame : IState, INGameEvent
         _players.Add(p2);
         _playerWins = new int[2];
         StatText = GameObject.Find("StateBanner").GetComponent<GameStatText>();
+        _AnimationDone = true;
     }
 
     public void GameStart()
@@ -66,6 +70,8 @@ public class InGame : IState, INGameEvent
     {
         OnUpdateState(InGameState.GameEnd);
         Debug.Log("OnGameEnd");
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        SceneManager.LoadSceneAsync("Finished");
     }
 
     public void RoundStart()
@@ -90,10 +96,6 @@ public class InGame : IState, INGameEvent
         AttackerIndex = (AttackerIndex + 1) % 2;
         DefenderIndex = (DefenderIndex + 1) % 2;
         _players.ForEach(p => p.RoundEnd());
-        if (_players[AttackerIndex].HP <= 0 || _players[DefenderIndex].HP <= 0)
-        {
-            _playerWins[_players[AttackerIndex].HP <= 0 ? 0 : 1] += 1;
-        }
         Board.Instance.DoneWithPieces = false;
     }
 
@@ -113,11 +115,22 @@ public class InGame : IState, INGameEvent
     {
         OnUpdateState(InGameState.MatchEnd);
         Debug.Log("OnMatchEnd");
-        _playerWins[_players[0].HP > _players[1].HP ? 0 : 1] += 1;
-        SweatShop.Instance.ReCyclePieces(Board.Instance.GetAllPieces());
+        if (_players[AttackerIndex].HP <= 0 || _players[DefenderIndex].HP <= 0)
+            _playerWins[_players.Single(p => p.m_PlayerName == "PLAYER_A").HP <= 0 ? 0 : 1] += 1;
+        var pieces = new List<Piece>();
+        pieces.AddRange(Board.Instance.GetAllPieces());
+        _players.ForEach(p => pieces.AddRange(p.GetPieces()));
+        SweatShop.Instance.ReCyclePieces(pieces);
+
         Board.Instance.Reset();
         _players.ForEach(p => p.MatchEnd());
         _currentRound = 0;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        Machine.ChangeState(new Finished(Machine));
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
     private InGameState ToState(string state)
@@ -136,7 +149,6 @@ public class InGame : IState, INGameEvent
             _players[AttackerIndex].InTurn = true;
             _players[DefenderIndex].InTurn = false;
             _players[AttackerIndex].TurnStart();
-            OnUpdateState(InGameState.PLAYER_A);
         }
         else if (CurrentTurnState == TurnState.Attacking)
         {
@@ -146,9 +158,10 @@ public class InGame : IState, INGameEvent
             _players[AttackerIndex].InTurn = false;
             _players[DefenderIndex].InTurn = true;
             _players[DefenderIndex].TurnStart();
-            OnUpdateState(InGameState.PLAYER_B);
-            ;
         }
+
+        if (_players[CurrentPlayerIndex].m_PlayerName == "PLAYER_A") OnUpdateState(InGameState.PLAYER_A);
+        else OnUpdateState(InGameState.PLAYER_B);
 
         // OnUpdateState(InGameState.InTurn);
     }
@@ -160,6 +173,14 @@ public class InGame : IState, INGameEvent
         if (CurrentTurnState == TurnState.Defending) _players[DefenderIndex].TurnEnd();
     }
 
+    private void AutoMove()
+    {
+        Board.Instance.SetupSide(_players[AttackerIndex].m_Side, Role.Attacker);
+        Board.Instance.SetupSide(_players[DefenderIndex].m_Side, Role.Defender);
+        Board.Instance.MakeThePiecesAlive();
+        OnUpdateState(InGameState.AutoMove);
+    }
+
     public override void OnEnter()
     {
         _currentRound = _currentMatch = 0;
@@ -168,26 +189,65 @@ public class InGame : IState, INGameEvent
 
     public override void OnUpdate()
     {
-        if (_currentRound == 0) MatchStart();
-        if (_currentRound == 10) MatchEnd();
-        if (CurrentState == InGameState.MatchStart ||
-            (CurrentState == InGameState.RoundEnd && _currentRound != 10)) RoundStart();
-        if (_players.All(p => p.ActionDone) && Board.Instance.DoneWithPieces) RoundEnd();
-        if (CurrentState == InGameState.RoundStart ||
-            (CurrentState == InGameState.TurnEnd && _players.Any(p => !p.ActionDone))) TurnStart();
-        if ((CurrentState == InGameState.PLAYER_A || CurrentState == InGameState.PLAYER_B) &&
-            _players[CurrentPlayerIndex].ActionDone) TurnEnd();
-        if (_players.All(p => p.ActionDone) && !Board.Instance.DealingWithPieces && CurrentState == InGameState.TurnEnd)
+        if (!_AnimationDone || _players.Any(p => !p.Done)) return;
+
+        switch (CurrentState)
         {
-            Board.Instance.SetupSide(_players[AttackerIndex].m_Side, Role.Attacker);
-            Board.Instance.SetupSide(_players[DefenderIndex].m_Side, Role.Defender);
-            Board.Instance.MakeThePiecesAlive();
-            OnUpdateState(InGameState.AutoMove);
+            case InGameState.GameStart:
+                MatchStart();
+                break;
+            case InGameState.MatchStart:
+                RoundStart();
+                break;
+            case InGameState.MatchEnd:
+                if (_playerWins.Any(w => w >= 2)) GameEnd();
+                else MatchStart();
+                break;
+            case InGameState.RoundStart:
+                TurnStart();
+                break;
+            case InGameState.PLAYER_A:
+                if (_players.Single(p => p.m_PlayerName == "PLAYER_A").ActionDone) TurnEnd();
+                break;
+            case InGameState.PLAYER_B:
+                if (_players.Single(p => p.m_PlayerName == "PLAYER_B").ActionDone) TurnEnd();
+                break;
+            case InGameState.RoundEnd:
+                if (_players.Any(p => p.HP <= 0) || _currentRound == 10) MatchEnd();
+                else if (_currentRound < 10) RoundStart();
+                break;
+            case InGameState.TurnEnd:
+                if (_players.Any(p => !p.ActionDone)) TurnStart();
+                else
+                    AutoMove();
+                break;
+            case InGameState.AutoMove:
+                if (Board.Instance.DoneWithPieces) RoundEnd();
+                break;
+            default:
+                return;
         }
 
-        if (_playerWins.Any(w => w >= 2)) GameEnd();
+        // if (_playerWins.Any(w => w >= 2)) GameEnd();
+        // if (_currentRound == 0) MatchStart();
+        // if (_currentRound == 10 || _players.Any(p => p.HP <= 0)) MatchEnd();
+        // if (CurrentState == InGameState.MatchStart ||
+        //     (CurrentState == InGameState.RoundEnd && _currentRound != 10)) RoundStart();
+        // if (_players.All(p => p.ActionDone) && Board.Instance.DoneWithPieces) RoundEnd();
+        // if (CurrentState == InGameState.RoundStart ||
+        //     (CurrentState == InGameState.TurnEnd && _players.Any(p => !p.ActionDone))) TurnStart();
+        // if ((CurrentState == InGameState.PLAYER_A || CurrentState == InGameState.PLAYER_B) &&
+        //     _players[CurrentPlayerIndex].ActionDone) TurnEnd();
+        // if (_players.All(p => p.ActionDone) && !Board.Instance.DealingWithPieces && CurrentState == InGameState.TurnEnd)
+        // {
+        //     Board.Instance.SetupSide(_players[AttackerIndex].m_Side, Role.Attacker);
+        //     Board.Instance.SetupSide(_players[DefenderIndex].m_Side, Role.Defender);
+        //     Board.Instance.MakeThePiecesAlive();
+        //     OnUpdateState(InGameState.AutoMove);
+        // }
+
         _players.ForEach(p => p.OnUpdate());
-        StatText.SetInfo(_currentRound, _currentMatch, _playerWins[0], _playerWins[1], _currentMatch);
+        StatText.SetInfo(_currentRound, _playerWins[0], _playerWins[1], _currentMatch);
     }
 
     public void OnUpdateState(InGameState state)
@@ -199,10 +259,5 @@ public class InGame : IState, INGameEvent
 
     public override void OnExit()
     {
-    }
-
-    public override int GetWinCount(string playerName)
-    {
-        return _playerWins[playerName == "PLAYER_A" ? 0 : 1];
     }
 }

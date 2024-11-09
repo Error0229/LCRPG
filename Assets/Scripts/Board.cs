@@ -27,14 +27,9 @@ public class Board : MonoBehaviour
         DealingWithPieces = false;
         // Singleton pattern to ensure there's only one instance of SweatShop
         if (Instance != null && Instance != this)
-        {
             Destroy(gameObject);
-        }
         else
-        {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Optional: if you want this to persist between scenes
-        }
 
         m_ObjectsOnBoard = new Dictionary<Vector2Int, GameObject>();
         grid = GetComponent<Grid>();
@@ -63,11 +58,14 @@ public class Board : MonoBehaviour
 
     private void GetSkills()
     {
-        foreach (var piece in _pieces)
+        _pieces.Where(p => p.IsAlive()).ToList().ForEach(p =>
         {
-            var sk = SweatShop.Instance.GetRandomSkill();
-            if (sk != null) piece.Acquire(sk);
-        }
+            for (var i = 0; i < p.ABILITY; i++)
+            {
+                var sk = SweatShop.Instance.GetRandomSkill();
+                if (sk != null) p.Acquire(sk);
+            }
+        });
     }
 
     private int ManhattanDistance(Vector2Int a, Vector2Int b)
@@ -85,6 +83,7 @@ public class Board : MonoBehaviour
         foreach (var attacker in attackers)
             for (var _ = 0; _ < attacker.SPEED; _++)
             {
+                if (!attacker.IsAlive()) break;
                 var reachable = attacker.GetMovableCells();
                 var attackable = defenders.Where(d => reachable.Contains(ToBoard2D(d.transform.position)))
                     .OrderBy(p => p.Type).ToList();
@@ -116,7 +115,7 @@ public class Board : MonoBehaviour
                 }
             }
 
-        foreach (var piece in _pieces) piece.FightEnd();
+        _pieces.ForEach(p => p.FightEnd());
         DealingWithPieces = false;
         DoneWithPieces = true;
     }
@@ -136,17 +135,57 @@ public class Board : MonoBehaviour
 
         attacker.transform.position = ToWorld(ToBoard(defenderPosition));
 
+
+        // 1. 计算基础伤害
+        var baseDamage = attacker.ATK * 1.5f;
+
+        // 2. 计算防御者的总防御力
+        var defenderTotalDEF = defender.DEF * 1.5f; // 防御加成50%
+
+        // 3. 计算初始伤害
+        var initialDamage = baseDamage - defenderTotalDEF;
+
+        // 4. 应用减伤效果（假设有20%减伤）
+        var damageAfterReduction = initialDamage * 0.8f;
+
+        // 5. 应用最小伤害限制
+        var actualDamage = Mathf.Max(Mathf.RoundToInt(damageAfterReduction), 1);
+
+        // 6. 暴击判定
+        if (Random.value < 0.2f) // 20%暴击概率
+            actualDamage = Mathf.RoundToInt(actualDamage * 1.5f);
+        // 7. 对防御者造成伤害
         // Execute attack
         // make the coroutines start together
+        var counterDamage = 0;
+        if (Random.value < 0.3f) // 30%反击概率
+        {
+            // 计算反击伤害
+            var counterBaseDamage = defender.ATK * 1.0f;
+            var attackerTotalDEF = attacker.DEF * 1.0f;
+            var counterInitialDamage = counterBaseDamage - attackerTotalDEF;
+            counterDamage = Mathf.Max(Mathf.RoundToInt(counterInitialDamage), 1);
+            // 对攻击者造成反击伤害
+        }
+
         yield return StartCoroutine(RunBothCoroutines());
 
         IEnumerator RunBothCoroutines()
         {
-            var attackerDamage = attacker.ATK - defender.DEF;
-            var defenderCoroutine = StartCoroutine(defender.Hurt(Mathf.Max(attackerDamage, 0)));
-
+            if (counterDamage > 0)
+            {
+                var attackerCoroutine = StartCoroutine(attacker.Hurt(actualDamage));
+                var defenderCoroutine = StartCoroutine(defender.Hurt(counterDamage));
+                yield return attackerCoroutine;
+                yield return defenderCoroutine;
+            }
+            else
+            {
+                var defenderCoroutine = StartCoroutine(defender.Hurt(actualDamage));
+                yield return defenderCoroutine;
+            }
+            // 8. 反击判定
             // Wait until both coroutines are done
-            yield return defenderCoroutine;
         }
 
         if (attacker.HP <= 0)
@@ -166,7 +205,8 @@ public class Board : MonoBehaviour
             m_ObjectsOnBoard.Add(ToBoard2D(attacker.transform.position), attacker.gameObject);
             _deadPieces.Add(defender);
         }
-        else
+
+        if (attacker.IsAlive() && defender.IsAlive())
         {
             // Move attacker back to the original position if the defender is still alive
             elapsedTime = 0f;
@@ -218,8 +258,6 @@ public class Board : MonoBehaviour
             .Where(piece => piece.Side == side && piece.IsAlive())
             .ToList()
             .ForEach(piece => placeableCells.AddRange(piece.GetMovableCells()));
-
-        foreach (var piece in _pieces) print(piece.Side + " " + piece.Role + " " + piece.transform.position);
 
         // Filter out occupied cells
         return placeableCells
@@ -302,7 +340,8 @@ public class Board : MonoBehaviour
         piece.transform.position = Instance.ToWorld2D(position);
         _pieces.Add(piece);
         m_ObjectsOnBoard.Add(position, piece.gameObject);
-        UpdatePlaceableCells();
+        if (piece.Type != PieceType.King)
+            UpdatePlaceableCells();
     }
 
     public void DropPiece(Piece piece, Vector3Int position)

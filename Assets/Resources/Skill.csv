@@ -1,0 +1,6 @@
+﻿SkillID,SkillName,EffectType,EffectValue,Duration,Probability,SpriteName,Description
+1,Attack Boost,ATK Boost,2,1,0.2,Buff_17,本回合攻擊力增加2點
+2,Health Refill,HP Refill,5,0,0.15,Buff_0,立即恢復5點生命值
+3,Double Strike,Double Attack,0,1,0.1,Buff_19,下一次攻擊造成雙倍傷害
+4,Shield,Defense Boost,3,2,0.15,Buff_18,防禦力提升3點 持續2回合
+5,Evasion,Evasion,0,1,0.1,Buff_16,下一次受到的攻擊將被閃避

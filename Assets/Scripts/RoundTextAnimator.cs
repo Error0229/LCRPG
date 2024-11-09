@@ -21,11 +21,13 @@ public class RoundTextAnimator : MonoBehaviour
     {
         startPosition = new Vector3(-Screen.width, 0, 0); // Start off-screen left
         centerPosition = Vector3.zero; // Center position relative to parent
+        gameObject.SetActive(false);
         // Start the animation sequence
     }
 
     public void ShowRound(string roundText)
     {
+        gameObject.SetActive(true);
         text.SetText(roundText);
         foreach (Transform child in transform) StartCoroutine(AnimateText(child));
     }

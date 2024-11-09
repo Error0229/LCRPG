@@ -12,11 +12,11 @@ public class Piece : MonoBehaviour
     public HealthBar m_HealthBar;
     public GameObject m_Buffs;
 
+    private int _ability;
+
     private int _atk;
     private int _def;
     private int _hp;
-
-    private int _range;
     public List<Skill> _skills = new();
     private int _speed;
     private Dictionary<Skill, GameObject> m_SkillIcon = new();
@@ -34,7 +34,7 @@ public class Piece : MonoBehaviour
             var mul = atk.Aggregate(1, (current, skill) => current * skill.EffectValue);
             return mul * (_atk + _skills.Where(s => s.SkillType == SkillType.AttackBoost).Sum(s => s.EffectValue));
         }
-        set => _hp = value;
+        set => _atk = value;
     }
 
     public int HP
@@ -49,10 +49,10 @@ public class Piece : MonoBehaviour
         set => _def = value;
     }
 
-    public int RANGE
+    public int ABILITY
     {
-        get => _range;
-        set => _range = value;
+        get => _ability;
+        set => _ability = value;
     }
 
     public int SPEED
@@ -92,7 +92,14 @@ public class Piece : MonoBehaviour
     {
         HP = MaxHealth;
         transform.rotation = Quaternion.identity;
+        _skills.Clear();
+        foreach (var skill in m_SkillIcon) Destroy(skill.Value);
+        m_SkillIcon.Clear();
         m_HealthBar.Reset();
+        // find all children with tag SkillText and destroy them
+        foreach (Transform child in transform)
+            if (child.CompareTag("SkillText"))
+                Destroy(child.gameObject);
     }
 
     private void Start()
@@ -110,6 +117,7 @@ public class Piece : MonoBehaviour
 
     public void FightEnd()
     {
+        if (!IsAlive()) return;
         var healing = _skills.Where(s => s.SkillType == SkillType.HealthRefill).Sum(s => s.EffectValue);
         if (healing > 0)
         {
@@ -125,14 +133,14 @@ public class Piece : MonoBehaviour
     }
 
 
-    public void Initialize(int hp, int atk, int def, int range, int speed, Side side, Role role, PieceType type)
+    public void Initialize(int hp, int atk, int def, int ability, int speed, Side side, Role role, PieceType type)
     {
         m_HealthBar.SetMaxHealth(hp);
         MaxHealth = hp;
         _hp = hp;
         _atk = atk;
         _def = def;
-        _range = range;
+        _ability = ability;
         _speed = speed;
         m_Side = side;
         m_Role = role;
@@ -303,15 +311,13 @@ public class Piece : MonoBehaviour
             _skills.Remove(skill);
             Destroy(m_SkillIcon[skill]);
             m_SkillIcon.Remove(skill);
-
-            yield return null;
         }
         else
         {
             HP -= damage;
             if (HP <= 0) HP = 0;
             StartCoroutine(HitAnimation());
-            yield return StartCoroutine(m_HealthBar.HealthBarAnimation(HP));
+            StartCoroutine(m_HealthBar.HealthBarAnimation(HP));
             if (HP <= 0) yield return StartCoroutine(Deadage());
         }
     }
@@ -355,13 +361,5 @@ public class Piece : MonoBehaviour
     public bool IsAlive()
     {
         return HP > 0;
-    }
-}
-
-public class PieceComparer : IComparer<Piece>
-{
-    public int Compare(Piece x, Piece y)
-    {
-        return x.Type.CompareTo(y.Type);
     }
 }

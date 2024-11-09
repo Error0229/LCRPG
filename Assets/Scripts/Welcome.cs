@@ -32,9 +32,4 @@ public class Welcome : IState
     public override void OnExit()
     {
     }
-
-    public override int GetWinCount(string playerName)
-    {
-        return 0;
-    }
 }
