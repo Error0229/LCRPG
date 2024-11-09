@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -22,6 +23,11 @@ public class Player : MonoBehaviour, INGameEvent
     public GameObject PieceSelector;
     public InRoundState CurrentState;
     public TextMeshProUGUI _text;
+    public Animator m_Animator;
+
+    public string m_PlayerName;
+    public HealthBar m_HealthBar;
+    private readonly Dictionary<Action, string> m_ActionAnimationMap = new(); // <Animation Name, Animation Clip>
     private int _atk;
     private InputAction _cancel;
     private GameObject _cursor;
@@ -31,16 +37,37 @@ public class Player : MonoBehaviour, INGameEvent
     private Piece _selectedPiece;
     private InputAction _submit;
     private List<GameObject> _UIHand;
+
     private InGame m_GameManager;
     private int m_HandIndex;
+    private SpriteRenderer m_SpriteRenderer;
+
+    private bool ShowHP;
 
     public int HP { get; set; }
+    private int MaxHp { get; set; }
 
     private void Awake()
     {
         _hand = new List<Piece>();
         _UIHand = new List<GameObject>();
         CurrentState = InRoundState.Waiting;
+        m_SpriteRenderer = GetComponent<SpriteRenderer>();
+        ShowHP = false;
+    }
+
+    public void Reset()
+    {
+        HP = MaxHp;
+        CurrentState = InRoundState.Waiting;
+        _hand.Clear();
+        foreach (var go in _UIHand)
+            Destroy(go);
+        _UIHand.Clear();
+        _selectedPiece = null;
+        _cursor.SetActive(false);
+        m_HealthBar.Reset();
+        _atk = 0;
     }
 
     private void Start()
@@ -52,59 +79,100 @@ public class Player : MonoBehaviour, INGameEvent
     }
 
 
-    public void OnGameStart()
+    public void GameStart()
     {
     }
 
-    public void OnGameEnd()
+    public void GameEnd()
     {
     }
 
-    public void OnMatchStart()
+    public void MatchStart()
     {
         ActionDone = false;
         var king = SweatShop.Instance.DrawPiece(m_Side, PieceType.King);
         Assert.IsNotNull(king);
+        king.m_HealthBar.Disable();
         Board.Instance.DropPiece(king, m_Side == Side.White ? new Vector2Int(0, 4) : new Vector2Int(7, 3));
+        ShowHP = true;
     }
 
-    public void OnMatchEnd()
+    public void MatchEnd()
     {
-        SweatShop.Instance.ReCyclePieces(Board.Instance.GetPieces());
+        ShowHP = false;
+        Reset();
     }
 
-    public void OnRoundStart()
+    public void RoundStart()
     {
         ActionDone = false;
         CurrentState = InRoundState.Waiting;
+        PieceSelector.SetActive(false);
     }
 
-    public void OnRoundEnd()
+    public void RoundEnd()
     {
     }
 
-    public void OnTurnStart()
+    public void TurnStart()
     {
         ShowHand();
         GetHand();
         CurrentState = InRoundState.Selecting;
     }
 
-    public void OnTurnEnd()
+    public void TurnEnd()
     {
         Board.Instance.HidePlaceableCells();
+        _UIHand.ForEach(g => Destroy(g));
+        _UIHand.Clear();
+        PieceSelector.SetActive(false);
         CurrentState = InRoundState.Waiting;
     }
-    
+
+
+    public IEnumerator Hurt(int damage)
+    {
+        HP -= damage;
+        yield return StartCoroutine(HitAnimation());
+        yield return StartCoroutine(m_HealthBar.HealthBarAnimation(HP));
+        if (HP <= 0) yield return StartCoroutine(Deadage());
+    }
+
+    public IEnumerator Deadage()
+    {
+        yield return new WaitForEndOfFrame();
+    }
+
+    public IEnumerator HitAnimation()
+    {
+        m_SpriteRenderer.color = Color.red;
+        yield return new WaitForSeconds(0.1f);
+        m_SpriteRenderer.color = Color.white;
+    }
+
+    // coroutine for healthbar animation
 
     public void OnUpdate()
     {
+        if (ShowHP)
+        {
+            var newHP = Board.Instance.GetAllPieces().Single(p => p.m_Side == m_Side && p.Type == PieceType.King).HP;
+            if (HP != newHP) StartCoroutine(Hurt(HP - newHP));
+        }
+
         if (!InTurn)
             return;
 
         if (CurrentState == InRoundState.Selecting)
         {
-            _text.SetText(SweatShop.Instance.GetRemainPiecesCount(m_Side).ToString());
+            _text.SetText(SweatShop.Instance.GetRemainPiecesCount(m_Side) + " pieces left");
+            if (_UIHand.Count > 0 && m_HandIndex < _UIHand.Count)
+            {
+                PieceSelector.SetActive(true);
+                PieceSelector.transform.position = _UIHand[m_HandIndex].transform.position;
+            }
+
             // Get wasd
             if (_move.WasPressedThisFrame())
             {
@@ -132,14 +200,6 @@ public class Player : MonoBehaviour, INGameEvent
             }
 
             if (_finish.WasPressedThisFrame()) ActionDone = true;
-
-            if (_cancel.WasPressedThisFrame())
-            {
-                _cursor.SetActive(false);
-                _UIHand[m_HandIndex].SetActive(true);
-                _selectedPiece = null;
-                ActionDone = true;
-            }
         }
         else if (CurrentState == InRoundState.Placing)
         {
@@ -152,16 +212,9 @@ public class Player : MonoBehaviour, INGameEvent
                     var movement = GetMovementDirection(input);
                     var cp = Board.Instance.ToBoard(_cursor.transform.position);
 
-                    var newCursor = new Vector2Int(cp.x, cp.y);
-                    for (var i = 1; i < 8; i++)
-                    {
-                        var next = newCursor + movement * i;
-                        if (Board.Instance.CanPlaceAt(next.x, next.y))
-                        {
-                            Board.Instance.PlaceAt(_cursor, next.x, next.y);
-                            break;
-                        }
-                    }
+                    var newCursor = new Vector2Int(cp.x, cp.y) + movement;
+                    if (Board.Instance.IsWithinBounds(newCursor))
+                        Board.Instance.PlaceAt(_cursor, newCursor.x, newCursor.y); // remove cursor();
                 }
 
                 // Helper function to determine movement direction based on input
@@ -186,32 +239,48 @@ public class Player : MonoBehaviour, INGameEvent
 
             if (_submit.WasPressedThisFrame())
             {
+                var c = Board.Instance.ToBoard(_cursor.transform.position); // get cursor()
+                if (!Board.Instance.CanPlaceAt(c.x, c.y)) return;
                 _cursor.SetActive(false);
                 _UIHand.RemoveAt(m_HandIndex);
                 _hand.RemoveAt(m_HandIndex); // remove from hand and board instance
                 m_HandIndex = 0;
-                Board.Instance.DropPiece(_selectedPiece, Board.Instance.ToBoard(_cursor.transform.position));
-                if (_UIHand.Count > 0) PieceSelector.SetActive(true);
+                Board.Instance.DropPiece(_selectedPiece, c);
+                if (_UIHand.Count > 0 && !PieceSelector.activeSelf)
+                {
+                    PieceSelector.SetActive(true);
+                    PieceSelector.transform.position = _UIHand[0].transform.position;
+                }
+
                 CurrentState = InRoundState.Selecting;
             }
         }
     }
 
-
-    public void Initialize(int hp, int atk, Side side, InGame gameManager)
+    public void Initialize(int hp, int atk, Side side, InGame gameManager, string playerName)
     {
         HP = hp;
+        MaxHp = hp;
         _atk = atk;
         m_Side = side;
         m_Role = Role.None;
         m_GameManager = gameManager;
+        m_PlayerName = playerName;
+        m_HealthBar.SetMaxHealth(HP);
+        m_ActionAnimationMap.Add(Action.Attack, "Attack");
+        m_ActionAnimationMap.Add(Action.Walk, "Walk");
+        m_ActionAnimationMap.Add(Action.Idle, "Idle");
+        if (playerName == "PLAYER_B") m_ActionAnimationMap.Add(Action.Die, "Die");
+        m_Animator.Play("Idle");
     }
 
 
     private void ShowHand()
     {
         HandUI.SetActive(true);
+        if (_hand.Count > 0) _hand.ForEach(p => PutPieceIntoHand(p.Type));
     }
+
 
     private void PutPieceIntoHand(PieceType type)
     {
@@ -223,21 +292,25 @@ public class Player : MonoBehaviour, INGameEvent
 
     private void GetHand()
     {
-        StartCoroutine(DrawPieces(3));
+        if (SweatShop.Instance.GetRemainPiecesCount(m_Side) > 0) DrawPieces(3);
     }
 
     // a coroutine for draw n pieces
-    private IEnumerator DrawPieces(int n)
+    private void DrawPieces(int n)
     {
         for (var i = 0; i < n; i++)
         {
-            PieceSelector.SetActive(true);
             var p = SweatShop.Instance.DrawPiece(m_Side);
             PutPieceIntoHand(p.Type);
             _hand.Add(p);
-
-            // wait for 0.3 seconds
-            yield return new WaitForSeconds(1.0f);
         }
+    }
+
+    private enum Action
+    {
+        Attack,
+        Die,
+        Walk,
+        Idle
     }
 }

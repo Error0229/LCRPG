@@ -15,6 +15,12 @@ public class StateDisplay : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        // if press tab hide the text
+        if (Input.GetKeyDown(KeyCode.Tab)) stateText.gameObject.SetActive(!stateText.gameObject.activeSelf);
+    }
+
     private void OnDestroy()
     {
         // Unsubscribe to prevent memory leaks

@@ -30,6 +30,17 @@ public class RoundTextAnimator : MonoBehaviour
         foreach (Transform child in transform) StartCoroutine(AnimateText(child));
     }
 
+    public void ShowMessage(string message)
+    {
+        startPosition = new Vector3(-Screen.width, 0, 0); // Start off-screen left
+        centerPosition = Vector3.zero; // Center position relative to parent
+        // Start the animation sequence
+        text.SetText(message);
+        foreach (Transform child in transform) StartCoroutine(AnimateText(child));
+    }
+
+    // wait for 0.3 seconds
+
     private IEnumerator AnimateText(Transform child)
     {
         // Ensure each child has a CanvasGroup component for opacity control

@@ -24,6 +24,15 @@ public enum PieceType
     Pawn
 }
 
+public enum SkillType
+{
+    AttackBoost,
+    HealthRefill,
+    AttackStrike,
+    DefenseBoost,
+    Evasion
+}
+
 public static class StringExtensions
 {
     public static PieceType ToPieceType(this string pieceName)

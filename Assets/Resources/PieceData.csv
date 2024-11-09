@@ -1,7 +1,7 @@
-Name,Count,ATK,HP
-King,1,20,20
-Queen,2,9,9
-Rook,4,5,5
-Bishop,4,3,3
-Knight,4,3,3
-Pawn,16,1,1
+Name,Count,ATK,HP,DEF,Range,Speed
+King,1,5,20,3,1,1
+Queen,1,8,12,2,3,3
+Rook,2,6,15,4,2,2
+Bishop,2,5,10,2,3,3
+Knight,2,7,12,3,1,4
+Pawn,8,3,5,1,1,1

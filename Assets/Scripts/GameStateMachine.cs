@@ -36,4 +36,9 @@ public class GameStateMachine : MonoBehaviour
         _currentState?.OnEnter();
         OnStateChanged?.Invoke(_currentState?.GetType().Name);
     }
+
+    public int GetPlayerWins(string playerName)
+    {
+        return _currentState.GetWinCount(playerName);
+    }
 }

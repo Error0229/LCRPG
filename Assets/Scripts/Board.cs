@@ -15,6 +15,7 @@ public class Board : MonoBehaviour
     public GameObject _cursor;
     public List<GameObject> _placeableTiles;
     public List<Piece> _pieces;
+    public List<Piece> _deadPieces;
 
     public Dictionary<Vector2Int, GameObject> m_ObjectsOnBoard;
     private Side m_Side;
@@ -39,54 +40,83 @@ public class Board : MonoBehaviour
         grid = GetComponent<Grid>();
         BoardOffset = new Vector3Int(-3, -4, 0);
         _pieces = new List<Piece>();
+        _deadPieces = new List<Piece>();
         _cursor.SetActive(false);
+    }
+
+    public void Reset()
+    {
+        m_ObjectsOnBoard.Clear();
+        _pieces.Clear();
+        _deadPieces.Clear();
+        _placeableTiles.ForEach(t => Destroy(t));
+        _placeableTiles.Clear();
     }
 
     public void MakeThePiecesAlive()
     {
         DealingWithPieces = true;
         DoneWithPieces = false;
+        GetSkills();
         StartCoroutine(Fight());
+    }
+
+    private void GetSkills()
+    {
+        foreach (var piece in _pieces)
+        {
+            var sk = SweatShop.Instance.GetRandomSkill();
+            if (sk != null) piece.Acquire(sk);
+        }
+    }
+
+    private int ManhattanDistance(Vector2Int a, Vector2Int b)
+    {
+        return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
     }
 
     private IEnumerator Fight()
     {
-        var attackers = _pieces.Where(p => p.Role == Role.Attacker && p.Type != PieceType.King)
+        _pieces.ForEach(p => p.FightStart());
+        var attackers = _pieces.Where(p => p.Role == Role.Attacker && p.Type != PieceType.King && p.IsAlive())
             .OrderByDescending(p => p.Type);
-        var defenders = _pieces.Where(p => p.Role == Role.Defender).ToList();
+        var defenders = _pieces.Where(p => p.Role == Role.Defender && p.IsAlive()).ToList();
 
         foreach (var attacker in attackers)
-        {
-            var reachable = attacker.GetMovableCells();
-            var attackable = defenders.Where(d => reachable.Contains(ToBoard2D(d.transform.position)))
-                .OrderBy(p => p.Type).ToList();
+            for (var _ = 0; _ < attacker.SPEED; _++)
+            {
+                var reachable = attacker.GetMovableCells();
+                var attackable = defenders.Where(d => reachable.Contains(ToBoard2D(d.transform.position)))
+                    .OrderBy(p => p.Type).ToList();
 
-            if (attackable.Count > 0)
-            {
-                var defender = attackable[0];
-                yield return StartCoroutine(Attack(attacker, defender, defenders));
-            }
-            else
-            {
-                // move toward king
-                var king = defenders.FirstOrDefault(p => p.Type == PieceType.King);
-                if (king)
+                if (attackable.Count > 0)
                 {
-                    var closet = new Vector3(999, 999, 999);
-                    foreach (var re in reachable)
+                    var defender = attackable[0];
+                    yield return StartCoroutine(Attack(attacker, defender, defenders));
+                }
+                else
+                {
+                    // move toward king
+                    var king = defenders.FirstOrDefault(p => p.Type == PieceType.King && p.Role == Role.Defender);
+                    if (king)
                     {
-                        var re3 = ToWorld2D(re);
-                        if (Vector3.Distance(re3, king.transform.position) <
-                            Vector3.Distance(closet, king.transform.position))
-                            closet = re3;
-                    }
+                        var closet = new Vector2Int(999, 999);
+                        var kingCell = ToBoard2D(king.transform.position);
+                        foreach (var re in reachable)
+                            if (!IsOccupied(re) && ManhattanDistance(re, kingCell) <
+                                ManhattanDistance(closet, kingCell))
+                                closet = re;
 
-                    if (closet != new Vector3(999, 999, 999))
-                        yield return StartCoroutine(MoveTowards(attacker, closet));
+                        if (closet != new Vector2Int(999, 999))
+                        {
+                            m_ObjectsOnBoard.Remove(ToBoard2D(attacker.transform.position));
+                            yield return StartCoroutine(MoveTowards(attacker, closet));
+                        }
+                    }
                 }
             }
-        }
 
+        foreach (var piece in _pieces) piece.FightEnd();
         DealingWithPieces = false;
         DoneWithPieces = true;
     }
@@ -97,33 +127,52 @@ public class Board : MonoBehaviour
         var defenderPosition = ToWorld(ToBoard(defender.transform.position));
         // Move attacker towards defender
         var elapsedTime = 0f;
-        while (elapsedTime < 0.5f)
+        while (elapsedTime < 0.3f)
         {
-            attacker.transform.position = Vector3.Lerp(originalPosition, defenderPosition, elapsedTime / 0.5f);
+            attacker.transform.position = Vector3.Lerp(originalPosition, defenderPosition, elapsedTime / 0.3f);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        attacker.transform.position = defenderPosition;
+        attacker.transform.position = ToWorld(ToBoard(defenderPosition));
 
         // Execute attack
-        defender.HP -= Mathf.Max(attacker.ATK - 2, 0); // Consider defender's defense
-        attacker.HP -= defender.ATK;
+        // make the coroutines start together
+        yield return StartCoroutine(RunBothCoroutines());
+
+        IEnumerator RunBothCoroutines()
+        {
+            var attackerDamage = attacker.ATK - defender.DEF;
+            var defenderCoroutine = StartCoroutine(defender.Hurt(Mathf.Max(attackerDamage, 0)));
+
+            // Wait until both coroutines are done
+            yield return defenderCoroutine;
+        }
+
+        if (attacker.HP <= 0)
+        {
+            m_ObjectsOnBoard.Remove(ToBoard2D(originalPosition));
+            attacker.Disable();
+            _deadPieces.Add(attacker);
+        }
 
         // Check defender's HP and handle accordingly
         if (defender.HP <= 0)
         {
             defenders.Remove(defender);
-            defender.gameObject.SetActive(false);
-            _pieces.Remove(defender);
+            defender.Disable();
+            m_ObjectsOnBoard.Remove(ToBoard2D(defenderPosition));
+            m_ObjectsOnBoard.Remove(ToBoard2D(originalPosition));
+            m_ObjectsOnBoard.Add(ToBoard2D(attacker.transform.position), attacker.gameObject);
+            _deadPieces.Add(defender);
         }
         else
         {
             // Move attacker back to the original position if the defender is still alive
             elapsedTime = 0f;
-            while (elapsedTime < 0.5f)
+            while (elapsedTime < 0.3f)
             {
-                attacker.transform.position = Vector3.Lerp(defenderPosition, originalPosition, elapsedTime / 0.5f);
+                attacker.transform.position = Vector3.Lerp(defenderPosition, originalPosition, elapsedTime / 0.3f);
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
@@ -132,21 +181,21 @@ public class Board : MonoBehaviour
         }
     }
 
-    private IEnumerator MoveTowards(Piece attacker, Vector3 position)
+    private IEnumerator MoveTowards(Piece attacker, Vector2Int position)
     {
         var originalPosition = ToWorld(ToBoard(attacker.transform.position));
-        position = ToWorld(ToBoard(position));
         // Calculate the direction towards the king and move a step closer (0.5 seconds)
         var elapsedTime = 0f;
-        while (elapsedTime < 0.5f)
+        while (elapsedTime < 0.3f)
         {
-            attacker.transform.position = Vector3.Lerp(originalPosition, position, elapsedTime / 0.5f);
+            attacker.transform.position = Vector3.Lerp(originalPosition, ToWorld2D(position), elapsedTime / 0.3f);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
         // Update the final position
-        attacker.transform.position = Vector3.MoveTowards(originalPosition, position, 1f); // Adjust the step as needed
+        attacker.transform.position = ToWorld2D(position);
+        m_ObjectsOnBoard[ToBoard2D(attacker.transform.position)] = attacker.gameObject;
     }
 
 
@@ -166,15 +215,28 @@ public class Board : MonoBehaviour
 
         // Get movable cells for pieces of the specified side
         _pieces
-            .Where(piece => piece.Side == side)
+            .Where(piece => piece.Side == side && piece.IsAlive())
             .ToList()
             .ForEach(piece => placeableCells.AddRange(piece.GetMovableCells()));
+
+        foreach (var piece in _pieces) print(piece.Side + " " + piece.Role + " " + piece.transform.position);
 
         // Filter out occupied cells
         return placeableCells
             .Distinct()
-            .Where(loc => _pieces.All(piece => ToBoard2D(piece.transform.position) != loc))
+            .Where(loc => _pieces.All(piece => !piece.IsAlive() || ToBoard2D(piece.transform.position) != loc))
             .ToList();
+    }
+
+    public Piece GetPieceAt(Vector2Int loc)
+    {
+        return _pieces.Find(piece => ToBoard2D(piece.transform.position) == loc);
+    }
+
+    public bool HaveEnemyPieceAt(Vector2Int loc, Side side)
+    {
+        return _pieces.Any(piece =>
+            piece.Side != side && ToBoard2D(piece.transform.position) == loc && piece.IsAlive());
     }
 
     public List<Vector2Int> ShowPlaceableCells(Side side)
@@ -256,16 +318,15 @@ public class Board : MonoBehaviour
 
     public void PlaceAt(GameObject go, int x, int y)
     {
-        foreach (var (k, v) in m_ObjectsOnBoard)
-            if (v.CompareTag("Placeable"))
-                v.SetActive(true);
-
-        if (m_ObjectsOnBoard.ContainsKey(new Vector2Int(x, y)) &&
-            m_ObjectsOnBoard[new Vector2Int(x, y)].CompareTag("Placeable") && go.CompareTag("Piece"))
-            m_ObjectsOnBoard[new Vector2Int(x, y)].SetActive(false);
+        // foreach (var (k, v) in m_ObjectsOnBoard)
+        //     if (v.CompareTag("Placeable"))
+        //         v.SetActive(true);
+        //
+        // if (m_ObjectsOnBoard.ContainsKey(new Vector2Int(x, y)) &&
+        //     m_ObjectsOnBoard[new Vector2Int(x, y)].CompareTag("Placeable") && go.CompareTag("Piece"))
+        //     m_ObjectsOnBoard[new Vector2Int(x, y)].SetActive(false);
         go.transform.position = Instance.ToWorld(new Vector3Int(x, y, 0));
     }
-
 
     public void Move(GameObject go, int x, int y)
     {
@@ -298,7 +359,7 @@ public class Board : MonoBehaviour
         return grid.CellToWorld(new Vector3Int(pos.x, pos.y) + BoardOffset);
     }
 
-    public List<Piece> GetPieces()
+    public List<Piece> GetAllPieces()
     {
         return _pieces;
     }
@@ -311,12 +372,14 @@ public class Board : MonoBehaviour
     public bool CanMoveToCell(Vector2Int pos, Piece piece)
     {
         if (!m_ObjectsOnBoard.ContainsKey(pos)) return true;
-        var otherPiece = _pieces.Find(p => p.gameObject == m_ObjectsOnBoard[pos]);
+        var otherPiece = _pieces.Find(p => p.gameObject == m_ObjectsOnBoard[pos] && p.IsAlive());
         return !otherPiece || otherPiece.Side != piece.Side;
     }
 
     public bool IsOccupied(Vector2Int pos)
     {
-        return _pieces.Any(p => ToBoard2D(p.transform.position) == pos);
+        if (!m_ObjectsOnBoard.ContainsKey(pos)) return false;
+        var otherPiece = _pieces.Find(p => p.gameObject == m_ObjectsOnBoard[pos] && p.IsAlive());
+        return otherPiece;
     }
 }

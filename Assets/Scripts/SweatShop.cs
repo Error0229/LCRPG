@@ -2,24 +2,27 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Assertions;
-using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 public class SweatShop : MonoBehaviour
 {
-    [FormerlySerializedAs("_roundTextPrefab")] [FormerlySerializedAs("_roundNumberPrefab")]
     public GameObject _roundText;
 
     public GameObject _piecePrefab;
     public GameObject PieceUIPrefab;
+    public GameObject m_SkillTextPrefab;
+    public GameObject m_SkillIconPrefab;
+    private readonly Dictionary<SkillType, Sprite> _skillIconsDict = new();
+    private readonly Dictionary<string, Skill> _skills = new();
     private List<Piece> _blackPieces;
     private List<Piece> _pieces;
 
     private Sprite[] _piecesSprites;
+    private Sprite[] _skillIcons;
 
     private List<Piece> _usedPieces;
     private List<Piece> _whitePieces;
+    private RoundTextAnimator RTA;
 
     public static SweatShop Instance { get; private set; }
 
@@ -38,11 +41,14 @@ public class SweatShop : MonoBehaviour
 
         _piecesSprites = Resources.LoadAll<Sprite>("Pieces/ChessAssets");
         _piecesSprites = _piecesSprites.Concat(Resources.LoadAll<Sprite>("Pieces/ChessAssetsUI")).ToArray();
+
+        _skillIcons = Resources.LoadAll<Sprite>("Buff");
         // Initialize _pieces
         _pieces = new List<Piece>();
         _blackPieces = new List<Piece>();
         _whitePieces = new List<Piece>();
         _usedPieces = new List<Piece>();
+        RTA = _roundText.GetComponent<RoundTextAnimator>();
 
         var csvData = Resources.Load<TextAsset>("PieceData");
         var rawData = csvData.text.Split('\n');
@@ -56,24 +62,41 @@ public class SweatShop : MonoBehaviour
             var count = int.Parse(fields[1]);
             var atk = int.Parse(fields[2]);
             var hp = int.Parse(fields[3]);
-
-            Debug.Log($"{pieceName} {count} {atk} {hp}");
-
+            var def = int.Parse(fields[4]);
+            var range = int.Parse(fields[5]);
+            var speed = int.Parse(fields[6]);
             // Add black pieces
             for (var j = 0; j < count; j++)
             {
                 var blackPiece =
-                    Instance.CreateInstance<Piece>(hp, atk, Side.Black, Role.None, pieceName.ToPieceType());
+                    Instance.CreateInstance<Piece>(hp, atk, def, range, speed, Side.Black, Role.None,
+                        pieceName.ToPieceType());
                 _blackPieces.Add(blackPiece);
-            }
-
-            // Add white pieces
-            for (var j = 0; j < count; j++)
-            {
                 var whitePiece =
-                    Instance.CreateInstance<Piece>(hp, atk, Side.White, Role.None, pieceName.ToPieceType());
+                    Instance.CreateInstance<Piece>(hp, atk, def, range, speed, Side.White, Role.None,
+                        pieceName.ToPieceType());
                 _whitePieces.Add(whitePiece);
             }
+        }
+
+        var skillDate = Resources.Load<TextAsset>("Skill").text.Split('\n');
+        for (var i = 1; i < skillDate.Length; i++)
+        {
+            var line = skillDate[i];
+            if (string.IsNullOrWhiteSpace(line)) continue; // Skip empty lines
+
+            var fields = line.Split(',');
+            var skillID = int.Parse(fields[0]);
+            var skillName = fields[1];
+            var effectType = fields[2];
+            var effectValue = int.Parse(fields[3]);
+            var duration = int.Parse(fields[4]);
+            var probability = float.Parse(fields[5]);
+            var SpriteName = fields[6];
+            _skillIconsDict.Add((SkillType)skillID, _skillIcons.SingleOrDefault(s => s.name == SpriteName));
+            var description = fields[7];
+            var skill = new Skill(skillID, skillName, effectType, effectValue, duration, probability, description);
+            _skills.Add(skillName, skill);
         }
     }
 
@@ -121,7 +144,6 @@ public class SweatShop : MonoBehaviour
         {
             var dr = _whitePieces.Single(p => p.Type == pieceType);
             if (!dr) return null;
-            Assert.IsNotNull(dr);
             _usedPieces.Add(dr);
             _whitePieces.Remove(dr);
             return dr;
@@ -132,8 +154,12 @@ public class SweatShop : MonoBehaviour
     {
         // ♻️
         foreach (var piece in pieces)
+        {
+            piece.Reset();
+            piece.Disable();
             if (piece.Side == Side.Black) _blackPieces.Add(piece);
             else _whitePieces.Add(piece);
+        }
     }
 
     public int GetRemainPiecesCount(Side side)
@@ -143,17 +169,54 @@ public class SweatShop : MonoBehaviour
 
     public void CreateRoundText(string text)
     {
-        _roundText.GetComponent<RoundTextAnimator>().ShowRound(text);
+        RTA.ShowRound(text);
     }
 
-    public T CreateInstance<T>(int hp, int atk, Side side, Role role, PieceType type) where T : Piece
+    public void ShowSkillText(string skillName, Transform tf)
+    {
+        CreateInstance<SkillTextAnimator>(skillName, tf);
+    }
+
+    public GameObject GetSkillIcon(SkillType skillType, Transform tf)
+    {
+        var go = Instantiate(m_SkillIconPrefab, tf);
+        go.GetComponent<SpriteRenderer>().sprite = _skillIconsDict[skillType];
+        return go;
+    }
+
+    public Skill GetRandomSkill()
+    {
+        // based on probability
+        var random = Random.Range(0f, 1f);
+        var currentProbability = 0f;
+        foreach (var skill in _skills.Values)
+        {
+            currentProbability += skill.Probability;
+            if (random < currentProbability)
+                return new Skill(skill.SkillID, skill.SkillName, skill.EffectType, skill.EffectValue,
+                    skill.Duration, skill.Probability, skill.Description);
+        }
+
+        return null;
+    }
+
+    public T CreateInstance<T>(int hp, int atk, int def, int range, int speed, Side side, Role role, PieceType type)
+        where T : Piece
     {
         var pieceObject = Instantiate(Instance._piecePrefab, Vector3.zero, Quaternion.identity);
         // pieceObject.SetActive(false);
-        var piece = pieceObject.AddComponent<T>();
+        var piece = pieceObject.GetComponent<T>();
         piece.Disable();
-        piece.Initialize(hp, atk, side, role, type);
+        piece.Initialize(hp, atk, def, range, speed, side, role, type);
         Instance._pieces.Add(piece);
         return piece;
+    }
+
+    public T CreateInstance<T>(string text, Transform tf) where T : SkillTextAnimator
+    {
+        var textObject = Instantiate(m_SkillTextPrefab, tf);
+        var textAnimator = textObject.GetComponent<T>();
+        textAnimator.Play(text, tf.position);
+        return textAnimator;
     }
 }

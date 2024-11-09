@@ -1,4 +1,3 @@
-using UnityEngine;
 public abstract class IState
 {
     protected GameStateMachine Machine;
@@ -7,9 +6,11 @@ public abstract class IState
     {
         Machine = machine;
     }
-    
+
 
     public abstract void OnEnter();
     public abstract void OnUpdate();
     public abstract void OnExit();
+
+    public abstract int GetWinCount(string playerName);
 }

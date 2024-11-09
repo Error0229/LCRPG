@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using UnityEngine.InputSystem;
+﻿using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public class Welcome : IState
@@ -15,16 +14,27 @@ public class Welcome : IState
     {
     }
 
-    public override async void OnUpdate()
+    public override void OnUpdate()
     {
         if (_submit.WasReleasedThisFrame())
         {
-            await SceneManager.LoadSceneAsync("InGame");
-            Machine.ChangeState(new InGame(Machine));
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            SceneManager.LoadSceneAsync("InGame");
         }
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        Machine.ChangeState(new InGame(Machine));
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
     public override void OnExit()
     {
+    }
+
+    public override int GetWinCount(string playerName)
+    {
+        return 0;
     }
 }
