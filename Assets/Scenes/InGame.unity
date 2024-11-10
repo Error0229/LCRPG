@@ -230,7 +230,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   grid: {fileID: 62538473}
   BoardOffset: {x: 0, y: 0, z: 0}
-  DealingWithPieces: 0
   DoneWithPieces: 0
   _placeablePrefab: {fileID: 2694045394299529902, guid: 69bea3f4736da82409065b3afd24ca43, type: 3}
   _cursor: {fileID: 1081258909}
@@ -1200,7 +1199,7 @@ RectTransform:
   m_GameObject: {fileID: 797986000}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: -5.770785, y: 1.0467432, z: 1.0707}
+  m_LocalScale: {x: 5, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1031989474}
@@ -1208,7 +1207,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 112.42, y: 100.68}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &797986002
 MonoBehaviour:
@@ -2149,15 +2148,15 @@ RectTransform:
   m_GameObject: {fileID: 1228129726}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.3359, y: 1.3359, z: 1.3359}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1031989474}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 3}
-  m_SizeDelta: {x: 435.69, y: 74.856}
+  m_AnchoredPosition: {x: 0.96, y: -0.0016993}
+  m_SizeDelta: {x: 448.22, y: 59.88}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1228129728
 MonoBehaviour:
@@ -2179,7 +2178,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: Player A Wins!
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 01638a7699312dc499acb5a25313c726, type: 2}
   m_sharedMaterial: {fileID: -2455720271116137612, guid: 01638a7699312dc499acb5a25313c726, type: 2}
@@ -2244,7 +2243,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 0.000013373611, z: -0.000030609415, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -2765,7 +2764,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 20 Pieces Left
+  m_text: 12 Pieces Left
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 01638a7699312dc499acb5a25313c726, type: 2}
   m_sharedMaterial: {fileID: -2455720271116137612, guid: 01638a7699312dc499acb5a25313c726, type: 2}

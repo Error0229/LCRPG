@@ -1,0 +1,13 @@
+@startuml
+class Skill {
+    + Description : string
+    + Duration : int
+    + EffectType : string
+    + EffectValue : int
+    + Probability : float
+    + SkillID : int
+    + SkillName : string
+    + Skill(skillID:int, skillName:string, effectType:string, effectValue:int, duration:int, probability:float, description:string)
+}
+Skill --> "SkillType" SkillType
+@enduml

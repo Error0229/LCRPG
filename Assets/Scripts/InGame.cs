@@ -34,15 +34,15 @@ public class InGame : IState, INGameEvent
 
     private readonly List<Player> _players;
     private readonly int[] _playerWins;
+    private readonly GameStatText StatText;
     private int _currentMatch;
 
     private int _currentRound;
-    public int AttackerIndex;
-    public int CurrentPlayerIndex;
-    public InGameState CurrentState;
-    public TurnState CurrentTurnState;
-    public int DefenderIndex;
-    public GameStatText StatText;
+    private int AttackerIndex;
+    private int CurrentPlayerIndex;
+    private InGameState CurrentState;
+    private TurnState CurrentTurnState;
+    private int DefenderIndex;
 
     public InGame(GameStateMachine machine) : base(machine)
     {
@@ -69,7 +69,6 @@ public class InGame : IState, INGameEvent
     public void GameEnd()
     {
         OnUpdateState(InGameState.GameEnd);
-        Debug.Log("OnGameEnd");
         SceneManager.sceneLoaded += OnSceneLoaded;
         SceneManager.LoadSceneAsync("Finished");
     }
@@ -77,7 +76,6 @@ public class InGame : IState, INGameEvent
     public void RoundStart()
     {
         OnUpdateState(InGameState.RoundStart);
-        Debug.Log("OnRoundStart");
         _currentRound++;
         SweatShop.Instance.CreateRoundText("Round " + _currentRound);
 
@@ -92,7 +90,6 @@ public class InGame : IState, INGameEvent
     public void RoundEnd()
     {
         OnUpdateState(InGameState.RoundEnd);
-        Debug.Log("OnRoundEnd");
         AttackerIndex = (AttackerIndex + 1) % 2;
         DefenderIndex = (DefenderIndex + 1) % 2;
         _players.ForEach(p => p.RoundEnd());
@@ -102,7 +99,6 @@ public class InGame : IState, INGameEvent
     public void MatchStart()
     {
         OnUpdateState(InGameState.MatchStart);
-        Debug.Log("OnMatchStart");
         _currentMatch++;
         AttackerIndex = _currentMatch % 2;
         DefenderIndex = (_currentMatch + 1) % 2;
@@ -114,12 +110,12 @@ public class InGame : IState, INGameEvent
     public void MatchEnd()
     {
         OnUpdateState(InGameState.MatchEnd);
-        Debug.Log("OnMatchEnd");
         if (_players[AttackerIndex].HP <= 0 || _players[DefenderIndex].HP <= 0)
         {
             var winner = _players.Single(p => p.HP > 0).m_PlayerName;
-            _playerWins[_players.Single(p => p.m_PlayerName == "PLAYER_A").HP <= 0 ? 0 : 1] += 1;
+            _playerWins[_players.Single(p => p.m_PlayerName == "PLAYER_A").HP <= 0 ? 1 : 0] += 1;
             SweatShop.Instance.CreateRoundText("The Winner is " + winner + "!");
+            GameStateMachine.Instance.WhoWins = winner;
         }
         else
         {
@@ -147,7 +143,7 @@ public class InGame : IState, INGameEvent
         return (InGameState)Enum.Parse(typeof(InGameState), state);
     }
 
-    public void TurnStart()
+    private void TurnStart()
     {
         OnUpdateState(InGameState.TurnStart);
         if (CurrentTurnState == TurnState.Idle)

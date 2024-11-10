@@ -1,0 +1,7 @@
+@startuml
+class GameStatText {
+    + SetInfo(round:int, AWins:int, BWins:int, match:int, who:string, role:Role) : void
+}
+MonoBehaviour <|-- GameStatText
+GameStatText --> "text" TextMeshProUGUI
+@enduml

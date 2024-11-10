@@ -155,9 +155,6 @@ public class SweatShop : MonoBehaviour
             if (piece.Side == Side.Black) _blackPieces.Add(piece);
             else _whitePieces.Add(piece);
         }
-
-        foreach (var piece in _blackPieces) print("Black: " + piece.Type);
-        foreach (var piece in _whitePieces) print("White: " + piece.Type);
     }
 
     public int GetRemainPiecesCount(Side side)
@@ -198,7 +195,7 @@ public class SweatShop : MonoBehaviour
         return null;
     }
 
-    public T CreateInstance<T>(int hp, int atk, int def, int ability, int speed, Side side, Role role, PieceType type)
+    private T CreateInstance<T>(int hp, int atk, int def, int ability, int speed, Side side, Role role, PieceType type)
         where T : Piece
     {
         var pieceObject = Instantiate(Instance._piecePrefab, Vector3.zero, Quaternion.identity);
@@ -210,7 +207,7 @@ public class SweatShop : MonoBehaviour
         return piece;
     }
 
-    public T CreateInstance<T>(string text, Transform tf) where T : SkillTextAnimator
+    private T CreateInstance<T>(string text, Transform tf) where T : SkillTextAnimator
     {
         var textObject = Instantiate(m_SkillTextPrefab, tf);
         var textAnimator = textObject.GetComponent<T>();

@@ -11,16 +11,16 @@ public class RoundTextAnimator : MonoBehaviour
     public float displayDuration = 1.0f;
 
     public TextMeshProUGUI text;
-    private CanvasGroup canvasGroup;
-    private Vector3 centerPosition;
+    private CanvasGroup _canvasGroup;
+    private Vector3 _centerPosition;
 
-    private RectTransform rectTransform;
-    private Vector3 startPosition;
+    private RectTransform _rectTransform;
+    private Vector3 _startPosition;
 
     private void Start()
     {
-        startPosition = new Vector3(-Screen.width, 0, 0); // Start off-screen left
-        centerPosition = Vector3.zero; // Center position relative to parent
+        _startPosition = new Vector3(-Screen.width, 0, 0); // Start off-screen left
+        _centerPosition = Vector3.zero; // Center position relative to parent
         gameObject.SetActive(false);
         // Start the animation sequence
     }
@@ -32,14 +32,6 @@ public class RoundTextAnimator : MonoBehaviour
         foreach (Transform child in transform) StartCoroutine(AnimateText(child));
     }
 
-    public void ShowMessage(string message)
-    {
-        startPosition = new Vector3(-Screen.width, 0, 0); // Start off-screen left
-        centerPosition = Vector3.zero; // Center position relative to parent
-        // Start the animation sequence
-        text.SetText(message);
-        foreach (Transform child in transform) StartCoroutine(AnimateText(child));
-    }
 
     // wait for 0.3 seconds
 
@@ -53,20 +45,20 @@ public class RoundTextAnimator : MonoBehaviour
         var rectTransform = child.GetComponent<RectTransform>();
 
         // Set initial positions and opacity
-        rectTransform.anchoredPosition = startPosition;
+        rectTransform.anchoredPosition = _startPosition;
         canvasGroup.alpha = 0;
 
         // Slide in
         var elapsed = 0f;
         while (elapsed < slideInDuration)
         {
-            rectTransform.anchoredPosition = Vector3.Lerp(startPosition, centerPosition, elapsed / slideInDuration);
+            rectTransform.anchoredPosition = Vector3.Lerp(_startPosition, _centerPosition, elapsed / slideInDuration);
             canvasGroup.alpha = Mathf.Lerp(0, 1, elapsed / slideInDuration);
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        rectTransform.anchoredPosition = centerPosition;
+        rectTransform.anchoredPosition = _centerPosition;
         canvasGroup.alpha = 1;
 
         // Wait for the display duration

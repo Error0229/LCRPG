@@ -1,0 +1,54 @@
+@startuml
+class Piece {
+    - _ability : int
+    - _atk : int
+    - _def : int
+    - _hp : int
+    - _speed : int
+    - maxHealthBarSize : float
+    + HpPercentage : float <<get>>
+    + ATK : int <<get>> <<set>>
+    + HP : int <<get>> <<set>>
+    + DEF : int <<get>> <<set>>
+    + ABILITY : int <<get>> <<set>>
+    + SPEED : int <<get>> <<set>>
+    + MaxHealth : int <<get>> <<set>>
+    - Awake() : void
+    + Reset() : void
+    - Start() : void
+    + FightStart() : void
+    + ShowSkillText(skillName:string) : void
+    + FightEnd() : void
+    + Initialize(hp:int, atk:int, def:int, ability:int, speed:int, side:Side, role:Role, type:PieceType) : void
+    + Acquire(skill:Skill) : void
+    + ApplySkill() : void
+    + Move() : void
+    + PlaceAt(x:int, y:int) : void
+    + Enable() : void
+    + Disable() : void
+    + Deadage() : IEnumerator
+    + GetMovableCells() : List<Vector2Int>
+    + Hurt(damage:int) : IEnumerator
+    + HitAnimation() : IEnumerator
+    - AddMoveIfValid(position:Vector2Int, moves:List<Vector2Int>) : void
+    - AddMoveIfEnemy(position:Vector2Int, moves:List<Vector2Int>) : void
+    - AddLineMoves(start:Vector2Int, direction:Vector2Int, moves:List<Vector2Int>) : void
+    + IsAlive() : bool
+}
+class "List`1"<T> {
+}
+class "Dictionary`2"<T1,T2> {
+}
+MonoBehaviour <|-- Piece
+Piece --> "m_Role" Role
+Piece --> "m_Side" Side
+Piece --> "m_HealthBar" HealthBar
+Piece --> "m_Buffs" GameObject
+Piece o-> "_skills<Skill>" "List`1"
+Piece o-> "m_SkillIcon<Skill,GameObject>" "Dictionary`2"
+Piece --> "spriteRenderer" SpriteRenderer
+Piece --> "Type" PieceType
+Piece --> "Side" Side
+Piece --> "Role" Role
+Piece --> "m_Sprite" Sprite
+@enduml

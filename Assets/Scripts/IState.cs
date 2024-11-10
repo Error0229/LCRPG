@@ -2,7 +2,7 @@ public abstract class IState
 {
     protected GameStateMachine Machine;
 
-    public IState(GameStateMachine machine)
+    protected IState(GameStateMachine machine)
     {
         Machine = machine;
     }

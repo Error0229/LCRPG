@@ -1,0 +1,22 @@
+@startuml
+left to right direction
+!include .\\.\Assets\Scripts\Board.puml
+!include .\\.\Assets\Scripts\Finished.puml
+!include .\\.\Assets\Scripts\GameStateMachine.puml
+!include .\\.\Assets\Scripts\GameStatText.puml
+!include .\\.\Assets\Scripts\HealthBar.puml
+!include .\\.\Assets\Scripts\InGame.puml
+!include .\\.\Assets\Scripts\InGameEvent.puml
+'!include .\\.\Assets\Scripts\InputControl.puml
+!include .\\.\Assets\Scripts\IState.puml
+!include .\\.\Assets\Scripts\Piece.puml
+!include .\\.\Assets\Scripts\Player.puml
+!include .\\.\Assets\Scripts\RoundTextAnimator.puml
+!include .\\.\Assets\Scripts\Skill.puml
+!include .\\.\Assets\Scripts\SkillTextAnimator.puml
+!include .\\.\Assets\Scripts\StateDisplay.puml
+!include .\\.\Assets\Scripts\SweatShop.puml
+!include .\\.\Assets\Scripts\Utils.puml
+!include .\\.\Assets\Scripts\Welcome.puml
+!include .\\.\Assets\Scripts\Winner.puml
+@enduml

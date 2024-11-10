@@ -1,0 +1,134 @@
+@startuml
+class "@InputControl" <<partial>> {
+    + @InputControl()
+    + Dispose() : void
+    + Contains(action:InputAction) : bool
+    + GetEnumerator() : IEnumerator<InputAction>
+    - GetEnumerator() : IEnumerator
+    + Enable() : void
+    + Disable() : void
+    + FindAction(actionNameOrId:string, throwIfNotFound:bool) : InputAction
+    + FindBinding(bindingMask:InputBinding, action:InputAction) : int
+    - m_KeyboardMouseSchemeIndex : int
+    - m_GamepadSchemeIndex : int
+    - m_TouchSchemeIndex : int
+    - m_JoystickSchemeIndex : int
+    - m_XRSchemeIndex : int
+}
+class "ReadOnlyArray`1"<T> {
+}
+class "IEnumerable`1"<T> {
+}
+class "List`1"<T> {
+}
+struct PlayerActions {
+    + PlayerActions(wrapper:@InputControl)
+    + Get() : InputActionMap
+    + Enable() : void
+    + Disable() : void
+    + enabled : bool <<get>>
+    + AddCallbacks(instance:IPlayerActions) : void
+    - UnregisterCallbacks(instance:IPlayerActions) : void
+    + RemoveCallbacks(instance:IPlayerActions) : void
+    + SetCallbacks(instance:IPlayerActions) : void
+}
+struct UIActions {
+    + UIActions(wrapper:@InputControl)
+    + Get() : InputActionMap
+    + Enable() : void
+    + Disable() : void
+    + enabled : bool <<get>>
+    + AddCallbacks(instance:IUIActions) : void
+    - UnregisterCallbacks(instance:IUIActions) : void
+    + RemoveCallbacks(instance:IUIActions) : void
+    + SetCallbacks(instance:IUIActions) : void
+}
+interface IPlayerActions {
+    OnMove(context:InputAction.CallbackContext) : void
+    OnLook(context:InputAction.CallbackContext) : void
+    OnAttack(context:InputAction.CallbackContext) : void
+    OnInteract(context:InputAction.CallbackContext) : void
+    OnCrouch(context:InputAction.CallbackContext) : void
+    OnJump(context:InputAction.CallbackContext) : void
+    OnPrevious(context:InputAction.CallbackContext) : void
+    OnNext(context:InputAction.CallbackContext) : void
+    OnSprint(context:InputAction.CallbackContext) : void
+}
+interface IUIActions {
+    OnNavigate(context:InputAction.CallbackContext) : void
+    OnSubmit(context:InputAction.CallbackContext) : void
+    OnCancel(context:InputAction.CallbackContext) : void
+    OnPoint(context:InputAction.CallbackContext) : void
+    OnClick(context:InputAction.CallbackContext) : void
+    OnRightClick(context:InputAction.CallbackContext) : void
+    OnMiddleClick(context:InputAction.CallbackContext) : void
+    OnScrollWheel(context:InputAction.CallbackContext) : void
+    OnTrackedDevicePosition(context:InputAction.CallbackContext) : void
+    OnTrackedDeviceOrientation(context:InputAction.CallbackContext) : void
+    OnFinish(context:InputAction.CallbackContext) : void
+}
+IInputActionCollection2 <|-- "@InputControl"
+IDisposable <|-- "@InputControl"
+"@InputControl" --> "asset" InputActionAsset
+"@InputControl" --> "bindingMask" InputBinding
+"@InputControl" --> "devices<InputDevice>" "ReadOnlyArray`1"
+"@InputControl" --> "controlSchemes<InputControlScheme>" "ReadOnlyArray`1"
+"@InputControl" --> "bindings<InputBinding>" "IEnumerable`1"
+"@InputControl" --> "m_Player" InputActionMap
+"@InputControl" o-> "m_PlayerActionsCallbackInterfaces<IPlayerActions>" "List`1"
+"@InputControl" --> "m_Player_Move" InputAction
+"@InputControl" --> "m_Player_Look" InputAction
+"@InputControl" --> "m_Player_Attack" InputAction
+"@InputControl" --> "m_Player_Interact" InputAction
+"@InputControl" --> "m_Player_Crouch" InputAction
+"@InputControl" --> "m_Player_Jump" InputAction
+"@InputControl" --> "m_Player_Previous" InputAction
+"@InputControl" --> "m_Player_Next" InputAction
+"@InputControl" --> "m_Player_Sprint" InputAction
+"@InputControl" --> "@Player" PlayerActions
+"@InputControl" --> "m_UI" InputActionMap
+"@InputControl" o-> "m_UIActionsCallbackInterfaces<IUIActions>" "List`1"
+"@InputControl" --> "m_UI_Navigate" InputAction
+"@InputControl" --> "m_UI_Submit" InputAction
+"@InputControl" --> "m_UI_Cancel" InputAction
+"@InputControl" --> "m_UI_Point" InputAction
+"@InputControl" --> "m_UI_Click" InputAction
+"@InputControl" --> "m_UI_RightClick" InputAction
+"@InputControl" --> "m_UI_MiddleClick" InputAction
+"@InputControl" --> "m_UI_ScrollWheel" InputAction
+"@InputControl" --> "m_UI_TrackedDevicePosition" InputAction
+"@InputControl" --> "m_UI_TrackedDeviceOrientation" InputAction
+"@InputControl" --> "m_UI_Finish" InputAction
+"@InputControl" --> "@UI" UIActions
+"@InputControl" --> "KeyboardMouseScheme" InputControlScheme
+"@InputControl" --> "GamepadScheme" InputControlScheme
+"@InputControl" --> "TouchScheme" InputControlScheme
+"@InputControl" --> "JoystickScheme" InputControlScheme
+"@InputControl" --> "XRScheme" InputControlScheme
+"@InputControl" +-- PlayerActions
+PlayerActions --> "m_Wrapper" "@InputControl"
+PlayerActions --> "@Move" InputAction
+PlayerActions --> "@Look" InputAction
+PlayerActions --> "@Attack" InputAction
+PlayerActions --> "@Interact" InputAction
+PlayerActions --> "@Crouch" InputAction
+PlayerActions --> "@Jump" InputAction
+PlayerActions --> "@Previous" InputAction
+PlayerActions --> "@Next" InputAction
+PlayerActions --> "@Sprint" InputAction
+"@InputControl" +-- UIActions
+UIActions --> "m_Wrapper" "@InputControl"
+UIActions --> "@Navigate" InputAction
+UIActions --> "@Submit" InputAction
+UIActions --> "@Cancel" InputAction
+UIActions --> "@Point" InputAction
+UIActions --> "@Click" InputAction
+UIActions --> "@RightClick" InputAction
+UIActions --> "@MiddleClick" InputAction
+UIActions --> "@ScrollWheel" InputAction
+UIActions --> "@TrackedDevicePosition" InputAction
+UIActions --> "@TrackedDeviceOrientation" InputAction
+UIActions --> "@Finish" InputAction
+"@InputControl" +-- IPlayerActions
+"@InputControl" +-- IUIActions
+@enduml

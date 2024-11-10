@@ -1,0 +1,9 @@
+@startuml
+class Winner {
+    + SetWinner(winnerName:string) : void
+}
+MonoBehaviour <|-- Winner
+Winner --> "winText" TextMeshProUGUI
+Winner --> "cat" GameObject
+Winner --> "king" GameObject
+@enduml

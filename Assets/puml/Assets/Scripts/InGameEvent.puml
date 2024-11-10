@@ -1,0 +1,10 @@
+@startuml
+interface INGameEvent {
+    + GameStart() : void
+    + GameEnd() : void
+    + MatchStart() : void
+    + MatchEnd() : void
+    + RoundStart() : void
+    + RoundEnd() : void
+}
+@enduml

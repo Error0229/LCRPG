@@ -1,0 +1,9 @@
+@startuml
+abstract class IState {
+    # IState(machine:GameStateMachine)
+    + {abstract} OnEnter() : void
+    + {abstract} OnUpdate() : void
+    + {abstract} OnExit() : void
+}
+IState --> "Machine" GameStateMachine
+@enduml

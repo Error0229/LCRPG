@@ -1,0 +1,10 @@
+@startuml
+class StateDisplay {
+    - Start() : void
+    - Update() : void
+    - OnDestroy() : void
+    - UpdateStateText(stateName:string) : void
+}
+MonoBehaviour <|-- StateDisplay
+StateDisplay --> "stateText" TextMeshProUGUI
+@enduml

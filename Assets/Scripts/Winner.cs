@@ -11,12 +11,12 @@ public class Winner : MonoBehaviour
     {
         if (winnerName == "PLAYER_A")
         {
-            king.SetActive(true);
+            cat.SetActive(true);
             winText.text = "Player A Wins";
         }
         else
         {
-            cat.SetActive(true);
+            king.SetActive(true);
             winText.text = "Player B Wins";
         }
     }

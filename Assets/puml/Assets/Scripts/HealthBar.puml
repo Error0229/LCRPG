@@ -1,0 +1,17 @@
+@startuml
+class HealthBar {
+    - _health : int
+    - _maxHealth : int
+    - _originHealthScale : float
+    - Awake() : void
+    + Reset() : void
+    + SetMaxHealth(health:int) : void
+    + Disable() : void
+    + UpdateHealth(health:int) : void
+    + HealthBarAnimation(health:float) : IEnumerator
+    + Hurt(damage:int) : void
+}
+MonoBehaviour <|-- HealthBar
+HealthBar --> "HealthValue" GameObject
+HealthBar --> "HealthBarContainer" GameObject
+@enduml

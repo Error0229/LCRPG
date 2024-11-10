@@ -1,0 +1,49 @@
+@startuml
+class Board {
+    + DoneWithPieces : bool
+    - Awake() : void
+    + Reset() : void
+    + MakeThePiecesAlive() : void
+    - GetSkills() : void
+    - ManhattanDistance(a:Vector2Int, b:Vector2Int) : int
+    - Fight() : IEnumerator
+    - Attack(attacker:Piece, defender:Piece, defenders:List<Piece>) : IEnumerator
+    - MoveTowards(attacker:Piece, position:Vector2Int) : IEnumerator
+    - GetPlaceableCells(side:Side) : List<Vector2Int>
+    + GetPieceAt(loc:Vector2Int) : Piece
+    + HaveEnemyPieceAt(loc:Vector2Int, side:Side) : bool
+    + ShowPlaceableCells(side:Side) : List<Vector2Int>
+    + SetupSide(side:Side, role:Role) : void
+    - UpdatePlaceableCells() : void
+    + HidePlaceableCells() : void
+    + DropPiece(piece:Piece, position:Vector2Int) : void
+    + DropPiece(piece:Piece, position:Vector3Int) : void
+    + CanPlaceAt(x:int, y:int) : bool
+    + PlaceAt(go:GameObject, x:int, y:int) : void
+    + Move(go:GameObject, x:int, y:int) : void
+    + MoveTo(go:GameObject, x:int, y:int) : void
+    + ToBoard(pos:Vector3) : Vector3Int
+    + ToBoard2D(pos:Vector3) : Vector2Int
+    + ToWorld(pos:Vector3Int) : Vector3
+    + ToWorld2D(pos:Vector2Int) : Vector3
+    + GetAllPieces() : List<Piece>
+    + IsWithinBounds(pos:Vector2Int) : bool
+    + CanMoveToCell(pos:Vector2Int, piece:Piece) : bool
+    + IsOccupied(pos:Vector2Int) : bool
+}
+class "List`1"<T> {
+}
+class "Dictionary`2"<T1,T2> {
+}
+MonoBehaviour <|-- Board
+Board --> "grid" Grid
+Board --> "BoardOffset" Vector3Int
+Board --> "_placeablePrefab" GameObject
+Board --> "_cursor" GameObject
+Board --> "_placeableTiles<GameObject>" "List`1"
+Board --> "_pieces<Piece>" "List`1"
+Board --> "_deadPieces<Piece>" "List`1"
+Board --> "m_ObjectsOnBoard<Vector2Int,GameObject>" "Dictionary`2"
+Board --> "m_Side" Side
+Board --> "Instance" Board
+@enduml

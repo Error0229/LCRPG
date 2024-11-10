@@ -1,0 +1,9 @@
+@startuml
+class SkillTextAnimator {
+    + Update() : void
+    + Play(s:string, position:Vector3) : void
+}
+MonoBehaviour <|-- SkillTextAnimator
+SkillTextAnimator --> "Text" TextMeshPro
+SkillTextAnimator --> "m_animator" Animator
+@enduml

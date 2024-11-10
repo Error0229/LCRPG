@@ -1,0 +1,11 @@
+@startuml
+class Welcome {
+    + Welcome(machine:GameStateMachine)
+    + <<override>> OnEnter() : void
+    + <<override>> OnUpdate() : void
+    - OnSceneLoaded(scene:Scene, mode:LoadSceneMode) : void
+    + <<override>> OnExit() : void
+}
+IState <|-- Welcome
+Welcome --> "_submit" InputAction
+@enduml

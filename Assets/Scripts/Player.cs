@@ -31,7 +31,6 @@ public class Player : MonoBehaviour, INGameEvent
     public string m_PlayerName;
     public HealthBar m_HealthBar;
     private readonly Dictionary<Action, string> m_ActionAnimationMap = new(); // <Animation Name, Animation Clip>
-    private int _atk;
     private InputAction _cancel;
     private GameObject _cursor;
     private InputAction _finish;
@@ -48,6 +47,9 @@ public class Player : MonoBehaviour, INGameEvent
     public bool Done { get; set; }
 
     public int HP { get; set; }
+
+    public int ATK { get; set; }
+
     private int MaxHp { get; set; }
 
     private void Awake()
@@ -96,7 +98,7 @@ public class Player : MonoBehaviour, INGameEvent
         ActionDone = false;
         var king = SweatShop.Instance.DrawPiece(m_Side, PieceType.King);
         king.HP = HP;
-        king.ATK = _atk;
+        king.ATK = ATK;
         Assert.IsNotNull(king);
         king.m_HealthBar.Disable();
         Board.Instance.DropPiece(king, m_Side == Side.White ? new Vector2Int(0, 3) : new Vector2Int(7, 4));
@@ -122,7 +124,7 @@ public class Player : MonoBehaviour, INGameEvent
     {
     }
 
-    public IEnumerator Leave()
+    private IEnumerator Leave()
     {
         Done = false;
         var targetPosition = transform.position;
@@ -170,7 +172,7 @@ public class Player : MonoBehaviour, INGameEvent
         Done = true;
     }
 
-    public IEnumerator Enter()
+    private IEnumerator Enter()
     {
         Done = false;
         Vector3 startPosition = new();
@@ -240,7 +242,7 @@ public class Player : MonoBehaviour, INGameEvent
     }
 
 
-    public IEnumerator Hurt(int damage)
+    private IEnumerator Hurt(int damage)
     {
         HP -= damage;
         if (damage > 0)
@@ -251,7 +253,7 @@ public class Player : MonoBehaviour, INGameEvent
         }
     }
 
-    public IEnumerator Deadage()
+    private IEnumerator Deadage()
     {
         Done = false;
         m_Animator.Play(m_ActionAnimationMap[Action.Dead]);
@@ -261,7 +263,7 @@ public class Player : MonoBehaviour, INGameEvent
         Done = true;
     }
 
-    public IEnumerator HitAnimation()
+    private IEnumerator HitAnimation()
     {
         m_SpriteRenderer.color = Color.red;
         yield return new WaitForSeconds(0.1f);
@@ -380,7 +382,7 @@ public class Player : MonoBehaviour, INGameEvent
     {
         HP = hp;
         MaxHp = hp;
-        _atk = atk;
+        ATK = atk;
         m_Side = side;
         m_Role = Role.None;
         m_GameManager = gameManager;

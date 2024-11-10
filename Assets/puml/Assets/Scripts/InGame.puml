@@ -1,0 +1,56 @@
+@startuml
+class InGame {
+    - <<readonly>> _AnimationDone : bool
+    - _currentMatch : int
+    - _currentRound : int
+    - AttackerIndex : int
+    - CurrentPlayerIndex : int
+    - DefenderIndex : int
+    + InGame(machine:GameStateMachine)
+    + GameStart() : void
+    + GameEnd() : void
+    + RoundStart() : void
+    + RoundEnd() : void
+    + MatchStart() : void
+    + MatchEnd() : void
+    - OnSceneLoaded(scene:Scene, mode:LoadSceneMode) : void
+    - ToState(state:string) : InGameState
+    - TurnStart() : void
+    + TurnEnd() : void
+    - AutoMove() : void
+    + <<override>> OnEnter() : void
+    + <<override>> OnUpdate() : void
+    + OnUpdateState(state:InGameState) : void
+    + <<override>> OnExit() : void
+}
+enum InGameState {
+    InRound,
+    InTurn,
+    RoundStart,
+    RoundEnd,
+    GameStart,
+    GameEnd,
+    MatchStart,
+    MatchEnd,
+    TurnStart,
+    TurnEnd,
+    AutoMove,
+    PLAYER_A,
+    PLAYER_B,
+}
+enum TurnState {
+    Attacking,
+    Defending,
+    Idle,
+}
+class "List`1"<T> {
+}
+IState <|-- InGame
+INGameEvent <|-- InGame
+InGame --> "_players<Player>" "List`1"
+InGame --> "StatText" GameStatText
+InGame --> "CurrentState" InGameState
+InGame --> "CurrentTurnState" TurnState
+InGame +-- InGameState
+InGame +-- TurnState
+@enduml

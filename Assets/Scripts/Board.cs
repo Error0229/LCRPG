@@ -9,7 +9,6 @@ public class Board : MonoBehaviour
 
     public Vector3Int BoardOffset;
 
-    public bool DealingWithPieces;
     public bool DoneWithPieces;
     public GameObject _placeablePrefab;
     public GameObject _cursor;
@@ -17,14 +16,13 @@ public class Board : MonoBehaviour
     public List<Piece> _pieces;
     public List<Piece> _deadPieces;
 
-    public Dictionary<Vector2Int, GameObject> m_ObjectsOnBoard;
+    private Dictionary<Vector2Int, GameObject> m_ObjectsOnBoard;
     private Side m_Side;
 
     public static Board Instance { get; private set; }
 
     private void Awake()
     {
-        DealingWithPieces = false;
         // Singleton pattern to ensure there's only one instance of SweatShop
         if (Instance != null && Instance != this)
             Destroy(gameObject);
@@ -50,7 +48,6 @@ public class Board : MonoBehaviour
 
     public void MakeThePiecesAlive()
     {
-        DealingWithPieces = true;
         DoneWithPieces = false;
         GetSkills();
         StartCoroutine(Fight());
@@ -86,7 +83,7 @@ public class Board : MonoBehaviour
                 if (!attacker.IsAlive()) break;
                 var reachable = attacker.GetMovableCells();
                 var attackable = defenders.Where(d => reachable.Contains(ToBoard2D(d.transform.position)))
-                    .OrderBy(p => p.Type).ToList();
+                    .OrderByDescending(p => p.Type).ToList();
 
                 if (attackable.Count > 0)
                 {
@@ -116,7 +113,6 @@ public class Board : MonoBehaviour
             }
 
         _pieces.ForEach(p => p.FightEnd());
-        DealingWithPieces = false;
         DoneWithPieces = true;
     }
 
@@ -136,36 +132,25 @@ public class Board : MonoBehaviour
         attacker.transform.position = ToWorld(ToBoard(defenderPosition));
 
 
-        // 1. 计算基础伤害
         var baseDamage = attacker.ATK * 1.5f;
 
-        // 2. 计算防御者的总防御力
-        var defenderTotalDEF = defender.DEF * 1.5f; // 防御加成50%
+        var defenderTotalDEF = defender.DEF * 1.5f;
 
-        // 3. 计算初始伤害
         var initialDamage = baseDamage - defenderTotalDEF;
 
-        // 4. 应用减伤效果（假设有20%减伤）
         var damageAfterReduction = initialDamage * 0.8f;
 
-        // 5. 应用最小伤害限制
         var actualDamage = Mathf.Max(Mathf.RoundToInt(damageAfterReduction), 1);
 
-        // 6. 暴击判定
-        if (Random.value < 0.2f) // 20%暴击概率
+        if (Random.value < 0.2f)
             actualDamage = Mathf.RoundToInt(actualDamage * 1.5f);
-        // 7. 对防御者造成伤害
-        // Execute attack
-        // make the coroutines start together
         var counterDamage = 0;
-        if (Random.value < 0.3f) // 30%反击概率
+        if (Random.value < 0.3f)
         {
-            // 计算反击伤害
             var counterBaseDamage = defender.ATK * 1.0f;
             var attackerTotalDEF = attacker.DEF * 1.0f;
             var counterInitialDamage = counterBaseDamage - attackerTotalDEF;
             counterDamage = Mathf.Max(Mathf.RoundToInt(counterInitialDamage), 1);
-            // 对攻击者造成反击伤害
         }
 
         yield return StartCoroutine(RunBothCoroutines());
@@ -184,7 +169,6 @@ public class Board : MonoBehaviour
                 var defenderCoroutine = StartCoroutine(defender.Hurt(actualDamage));
                 yield return defenderCoroutine;
             }
-            // 8. 反击判定
             // Wait until both coroutines are done
         }
 
@@ -239,7 +223,7 @@ public class Board : MonoBehaviour
     }
 
 
-    public List<Vector2Int> GetPlaceableCells(Side side)
+    private List<Vector2Int> GetPlaceableCells(Side side)
     {
         var placeableCells = new List<Vector2Int>();
 
@@ -302,7 +286,7 @@ public class Board : MonoBehaviour
         });
     }
 
-    public void UpdatePlaceableCells()
+    private void UpdatePlaceableCells()
     {
         var l = GetPlaceableCells(m_Side);
         foreach (var loc in l)
@@ -357,13 +341,6 @@ public class Board : MonoBehaviour
 
     public void PlaceAt(GameObject go, int x, int y)
     {
-        // foreach (var (k, v) in m_ObjectsOnBoard)
-        //     if (v.CompareTag("Placeable"))
-        //         v.SetActive(true);
-        //
-        // if (m_ObjectsOnBoard.ContainsKey(new Vector2Int(x, y)) &&
-        //     m_ObjectsOnBoard[new Vector2Int(x, y)].CompareTag("Placeable") && go.CompareTag("Piece"))
-        //     m_ObjectsOnBoard[new Vector2Int(x, y)].SetActive(false);
         go.transform.position = Instance.ToWorld(new Vector3Int(x, y, 0));
     }
 

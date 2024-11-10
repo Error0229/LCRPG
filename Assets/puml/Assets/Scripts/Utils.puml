@@ -1,0 +1,35 @@
+@startuml
+enum Side {
+    White,
+    Black,
+}
+enum Role {
+    Attacker,
+    Defender,
+    None,
+}
+enum PieceType {
+    King,
+    Queen,
+    Bishop,
+    Knight,
+    Rook,
+    Pawn,
+}
+enum SkillType {
+    AttackBoost,
+    HealthRefill,
+    AttackStrike,
+    DefenseBoost,
+    Evasion,
+}
+class StringExtensions <<static>> {
+    + {static} ToPieceType(pieceName:string) : PieceType
+}
+class RoleExtensions <<static>> {
+    + {static} Switch(role:Role) : Role
+}
+class SideExtensions <<static>> {
+    + {static} ToAbbreviation(side:Side) : string
+}
+@enduml

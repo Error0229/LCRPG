@@ -1,0 +1,15 @@
+@startuml
+class GameStateMachine {
+    + WhoWins : string
+    + CurrentStateName : string <<get>>
+    - Awake() : void
+    - Update() : void
+    + ChangeState(newState:IState) : void
+}
+class "UnityEvent`1"<T> {
+}
+MonoBehaviour <|-- GameStateMachine
+GameStateMachine --> "OnStateChanged<string>" "UnityEvent`1"
+GameStateMachine --> "_currentState" IState
+GameStateMachine --> "Instance" GameStateMachine
+@enduml

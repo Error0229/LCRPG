@@ -1,0 +1,12 @@
+@startuml
+class Finished {
+    + Finished(machine:GameStateMachine)
+    + <<override>> OnEnter() : void
+    + <<override>> OnUpdate() : void
+    - OnSceneLoaded(scene:Scene, mode:LoadSceneMode) : void
+    + <<override>> OnExit() : void
+}
+IState <|-- Finished
+Finished --> "_submit" InputAction
+Finished --> "_winner" Winner
+@enduml

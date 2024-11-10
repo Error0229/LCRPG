@@ -1,0 +1,16 @@
+@startuml
+class RoundTextAnimator {
+    + slideInDuration : float = 0.5f
+    + fadeOutDuration : float = 0.5f
+    + displayDuration : float = 1.0f
+    - Start() : void
+    + ShowRound(roundText:string) : void
+    - AnimateText(child:Transform) : IEnumerator
+}
+MonoBehaviour <|-- RoundTextAnimator
+RoundTextAnimator --> "text" TextMeshProUGUI
+RoundTextAnimator --> "_canvasGroup" CanvasGroup
+RoundTextAnimator --> "_centerPosition" Vector3
+RoundTextAnimator --> "_rectTransform" RectTransform
+RoundTextAnimator --> "_startPosition" Vector3
+@enduml

@@ -1,0 +1,34 @@
+@startuml
+class SweatShop {
+    - Awake() : void
+    + GetPieces(side:Side) : List<Piece>
+    + GetSpriteByName(name:string) : Sprite
+    + DrawPiece(side:Side, pieceType:PieceType?) : Piece
+    + ReCyclePieces(pieces:List<Piece>) : void
+    + GetRemainPiecesCount(side:Side) : int
+    + CreateRoundText(text:string) : void
+    + ShowSkillText(skillName:string, tf:Transform) : void
+    + GetSkillIcon(skillType:SkillType, tf:Transform) : GameObject
+    + GetRandomSkill() : Skill
+    - CreateInstance(hp:int, atk:int, def:int, ability:int, speed:int, side:Side, role:Role, type:PieceType) : T
+    - CreateInstance(text:string, tf:Transform) : T
+}
+class "Dictionary`2"<T1,T2> {
+}
+class "List`1"<T> {
+}
+MonoBehaviour <|-- SweatShop
+SweatShop --> "_roundText" GameObject
+SweatShop --> "_piecePrefab" GameObject
+SweatShop --> "PieceUIPrefab" GameObject
+SweatShop --> "m_SkillTextPrefab" GameObject
+SweatShop --> "m_SkillIconPrefab" GameObject
+SweatShop o-> "_skillIconsDict<SkillType,Sprite>" "Dictionary`2"
+SweatShop o-> "_skills<string,Skill>" "Dictionary`2"
+SweatShop --> "_blackPieces<Piece>" "List`1"
+SweatShop --> "_pieces<Piece>" "List`1"
+SweatShop --> "_usedPieces<Piece>" "List`1"
+SweatShop --> "_whitePieces<Piece>" "List`1"
+SweatShop --> "RTA" RoundTextAnimator
+SweatShop --> "Instance" SweatShop
+@enduml

@@ -1,0 +1,76 @@
+@startuml
+class Player {
+    + InTurn : bool
+    + ActionDone : bool
+    + m_PlayerName : string
+    - m_HandIndex : int
+    - ShowHP : bool
+    + Done : bool <<get>> <<set>>
+    + HP : int <<get>> <<set>>
+    + ATK : int <<get>> <<set>>
+    - MaxHp : int <<get>> <<set>>
+    - Awake() : void
+    + Reset() : void
+    - Start() : void
+    + GameStart() : void
+    + GameEnd() : void
+    + MatchStart() : void
+    + MatchEnd() : void
+    + RoundStart() : void
+    + RoundEnd() : void
+    - Leave() : IEnumerator
+    - Enter() : IEnumerator
+    + TurnStart() : void
+    + TurnEnd() : void
+    - Hurt(damage:int) : IEnumerator
+    - Deadage() : IEnumerator
+    - HitAnimation() : IEnumerator
+    + OnUpdate() : void
+    + Initialize(hp:int, atk:int, side:Side, gameManager:InGame, playerName:string) : void
+    - ShowHand() : void
+    - PutPieceIntoHand(type:PieceType) : void
+    - GetHand() : void
+    + GetPieces() : List<Piece>
+    - DrawPieces(n:int) : void
+}
+enum InRoundState {
+    Selecting,
+    Placing,
+    Waiting,
+}
+class "Dictionary`2"<T1,T2> {
+}
+class "List`1"<T> {
+}
+enum Action {
+    Attack,
+    Dead,
+    Walk,
+    Idle,
+}
+MonoBehaviour <|-- Player
+INGameEvent <|-- Player
+Player o-> "whiteAnchor" Vector3
+Player o-> "blackAnchor" Vector3
+Player --> "m_Role" Role
+Player --> "m_Side" Side
+Player --> "HandUI" GameObject
+Player --> "PieceSelector" GameObject
+Player --> "CurrentState" InRoundState
+Player --> "_text" TextMeshProUGUI
+Player --> "m_Animator" Animator
+Player --> "m_HealthBar" HealthBar
+Player o-> "m_ActionAnimationMap<Action,string>" "Dictionary`2"
+Player --> "_cancel" InputAction
+Player --> "_cursor" GameObject
+Player --> "_finish" InputAction
+Player --> "_hand<Piece>" "List`1"
+Player --> "_move" InputAction
+Player --> "_selectedPiece" Piece
+Player --> "_submit" InputAction
+Player --> "_UIHand<GameObject>" "List`1"
+Player --> "m_GameManager" InGame
+Player --> "m_SpriteRenderer" SpriteRenderer
+Player +-- InRoundState
+Player +-- Action
+@enduml
