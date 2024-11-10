@@ -133,7 +133,7 @@ public class Player : MonoBehaviour, INGameEvent
             case Side.White:
                 targetPosition = whiteAnchor;
                 // Set target position to the left
-                targetPosition.x -= 10f; // Move left by 10 units
+                targetPosition.x -= 4f; // Move left by 10 units
 
                 // Flip the sprite to face left
                 var scaleLeft = transform.localScale;
@@ -144,7 +144,7 @@ public class Player : MonoBehaviour, INGameEvent
             case Side.Black:
                 targetPosition = blackAnchor;
                 // Set target position to the right
-                targetPosition.x += 10f; // Move right by 10 units
+                targetPosition.x += 4f; // Move right by 10 units
 
                 // Ensure the sprite is facing right
                 var scaleRight = transform.localScale;
@@ -183,7 +183,7 @@ public class Player : MonoBehaviour, INGameEvent
                 targetPosition = whiteAnchor;
                 startPosition = targetPosition;
                 // Start off-screen to the left
-                startPosition.x -= 5f;
+                startPosition.x -= 4f;
                 // Ensure the sprite is facing right
                 var scaleRight = transform.localScale;
                 scaleRight.x = Mathf.Abs(scaleRight.x);
@@ -194,7 +194,7 @@ public class Player : MonoBehaviour, INGameEvent
                 targetPosition = blackAnchor;
                 startPosition = targetPosition;
                 // Start off-screen to the right
-                startPosition.x += 5f;
+                startPosition.x += 4f;
                 // Flip the sprite to face left
                 var scaleLeft = transform.localScale;
                 scaleLeft.x = -Mathf.Abs(scaleLeft.x);
@@ -226,6 +226,7 @@ public class Player : MonoBehaviour, INGameEvent
         ShowHand();
         GetHand();
         CurrentState = InRoundState.Selecting;
+        m_Animator.Play(m_ActionAnimationMap[Action.Attack]);
     }
 
     public void TurnEnd()
@@ -234,6 +235,7 @@ public class Player : MonoBehaviour, INGameEvent
         _UIHand.ForEach(Destroy);
         _UIHand.Clear();
         PieceSelector.SetActive(false);
+        m_Animator.Play(m_ActionAnimationMap[Action.Idle]);
         CurrentState = InRoundState.Waiting;
     }
 

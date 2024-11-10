@@ -7,23 +7,15 @@ public class GameStatText : MonoBehaviour
 {
     public TextMeshProUGUI text;
 
-
-    private void Start()
+    public void SetInfo(int round, int AWins, int BWins, int match, string who, Role role)
     {
-        // Start the animation sequence
-    }
-
-    private void Update()
-    {
-    }
-
-    public void SetInfo(int round, int AWins, int BWins, int match)
-    {
+        // A Wins:1, B Wins:2
+        // Match: 2 Round: 2
+        // PLAYER_A's turn, as the Attacker
         text.SetText(
-            $"Round: {round}\n" +
-            $"A Wins: {AWins}\n" +
-            $"B Wins: {BWins}\n" +
-            $"Match: {match}"
+            $"A Wins:{AWins}, " + $"B Wins:{BWins}\n" +
+            $"Match: {match}\n" + $"Round: {round}\n" +
+            $"{who}'s turn, as the {role}"
         );
     }
 }

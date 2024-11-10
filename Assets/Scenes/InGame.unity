@@ -2206,10 +2206,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 51.25
+  m_fontSize: 72
   m_fontSizeBase: 51.25
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
@@ -2379,8 +2379,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 5.83, y: -0.3}
-  m_SizeDelta: {x: 144.37, y: 42.02}
+  m_AnchoredPosition: {x: 5.52, y: -1.38}
+  m_SizeDelta: {x: 149.54, y: 75.74}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1362618866
 MonoBehaviour:
@@ -2402,9 +2402,12 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'A Wins: 1
+  m_text: 'A Wins:1, B Wins:2
 
-    B Wins: 0'
+    Match: 2 Round: 2
+
+    PLAYER_A''s turn, as the
+    Attacker'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 01638a7699312dc499acb5a25313c726, type: 2}
   m_sharedMaterial: {fileID: -2455720271116137612, guid: 01638a7699312dc499acb5a25313c726, type: 2}
@@ -2431,11 +2434,11 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 25.85
+  m_fontSize: 18.6
   m_fontSizeBase: 16
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 18
+  m_fontSizeMin: 12
   m_fontSizeMax: 72
   m_fontStyle: 1
   m_HorizontalAlignment: 1
@@ -2469,7 +2472,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 1.5976772, y: 1.0678167, z: 0.098312385, w: 0}
+  m_margin: {x: 1.5976772, y: 1.0678167, z: 0.098312385, w: 1.1386681}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0

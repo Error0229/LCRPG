@@ -116,7 +116,16 @@ public class InGame : IState, INGameEvent
         OnUpdateState(InGameState.MatchEnd);
         Debug.Log("OnMatchEnd");
         if (_players[AttackerIndex].HP <= 0 || _players[DefenderIndex].HP <= 0)
+        {
+            var winner = _players.Single(p => p.HP > 0).m_PlayerName;
             _playerWins[_players.Single(p => p.m_PlayerName == "PLAYER_A").HP <= 0 ? 0 : 1] += 1;
+            SweatShop.Instance.CreateRoundText("The Winner is " + winner + "!");
+        }
+        else
+        {
+            SweatShop.Instance.CreateRoundText("Draw!");
+        }
+
         var pieces = new List<Piece>();
         pieces.AddRange(Board.Instance.GetAllPieces());
         _players.ForEach(p => pieces.AddRange(p.GetPieces()));
@@ -228,26 +237,9 @@ public class InGame : IState, INGameEvent
                 return;
         }
 
-        // if (_playerWins.Any(w => w >= 2)) GameEnd();
-        // if (_currentRound == 0) MatchStart();
-        // if (_currentRound == 10 || _players.Any(p => p.HP <= 0)) MatchEnd();
-        // if (CurrentState == InGameState.MatchStart ||
-        //     (CurrentState == InGameState.RoundEnd && _currentRound != 10)) RoundStart();
-        // if (_players.All(p => p.ActionDone) && Board.Instance.DoneWithPieces) RoundEnd();
-        // if (CurrentState == InGameState.RoundStart ||
-        //     (CurrentState == InGameState.TurnEnd && _players.Any(p => !p.ActionDone))) TurnStart();
-        // if ((CurrentState == InGameState.PLAYER_A || CurrentState == InGameState.PLAYER_B) &&
-        //     _players[CurrentPlayerIndex].ActionDone) TurnEnd();
-        // if (_players.All(p => p.ActionDone) && !Board.Instance.DealingWithPieces && CurrentState == InGameState.TurnEnd)
-        // {
-        //     Board.Instance.SetupSide(_players[AttackerIndex].m_Side, Role.Attacker);
-        //     Board.Instance.SetupSide(_players[DefenderIndex].m_Side, Role.Defender);
-        //     Board.Instance.MakeThePiecesAlive();
-        //     OnUpdateState(InGameState.AutoMove);
-        // }
-
         _players.ForEach(p => p.OnUpdate());
-        StatText.SetInfo(_currentRound, _playerWins[0], _playerWins[1], _currentMatch);
+        StatText.SetInfo(_currentRound, _playerWins[0], _playerWins[1], _currentMatch,
+            _players[CurrentPlayerIndex].m_PlayerName, _players[CurrentPlayerIndex].m_Role);
     }
 
     public void OnUpdateState(InGameState state)

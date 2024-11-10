@@ -30,14 +30,9 @@ public class SweatShop : MonoBehaviour
     {
         // Singleton pattern to ensure there's only one instance of SweatShop
         if (Instance != null && Instance != this)
-        {
             Destroy(gameObject);
-        }
         else
-        {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Optional: if you want this to persist between scenes
-        }
 
         _piecesSprites = Resources.LoadAll<Sprite>("Pieces/ChessAssets");
         _piecesSprites = _piecesSprites.Concat(Resources.LoadAll<Sprite>("Pieces/ChessAssetsUI")).ToArray();
