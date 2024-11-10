@@ -12,7 +12,7 @@ Flowchart 及 Class Diagram 如後兩頁。若想仔細看，可以查看附檔�
 程式碼如附檔。若需檢查完整專案可至 #link("https://github.com/Error0229/LCRPG","GitHub Repo") 訪問。
 
 = Flow Chart
-#image("FSM.svg", height: 90%)
+#align(right, image("FSM.png", height: 90%))
 
 = Class Diagram
 #image("Assets/puml/ClassDiagram.svg")
